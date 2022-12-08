@@ -1,6 +1,10 @@
-#!/bin/bash -x
+#!/bin/zsh -x
 
 
 START_TIME=$(date +"[%Y-%m-%d %H:%M:%S] copy start")
-
 echo ${START_TIME} | tee /dev/stderr
+
+source ~/.zshrc
+
+cd ..
+poetry run make
