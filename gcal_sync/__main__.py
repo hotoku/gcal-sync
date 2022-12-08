@@ -2,6 +2,7 @@ from __future__ import print_function
 
 import datetime
 import os
+from pprint import pprint
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -53,10 +54,8 @@ def main():
             print('No upcoming events found.')
             return
 
-        # Prints the start and name of the next 10 events
-        for event in events:
-            start = event['start'].get('dateTime', event['start'].get('date'))
-            print(start, event['summary'])
+        pprint([(e["id"], e["start"]["dateTime"])
+               for e in events if e["summary"] == "テスト"])
 
     except HttpError as error:
         print('An error occurred: %s' % error)
