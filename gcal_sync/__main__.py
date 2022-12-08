@@ -3,7 +3,7 @@ from __future__ import print_function
 import os
 import re
 from pprint import pprint
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 import click
@@ -52,26 +52,32 @@ def get_service(creds: Credentials):
     return ret
 
 
-def list_events(creds: Credentials):
+def list_events(creds: Credentials, days: int, calendar_id: str) -> list[dict[str, Any]]:
     service = get_service(creds)
 
-    now = datetime.utcnow().isoformat() + 'Z'  # 'Z' indicates UTC time
-    events_result = service.events().list(calendarId='primary', timeMin=now,
-                                          maxResults=10, singleEvents=True,
-                                          orderBy='startTime').execute()
+    time_min = datetime.now(tz=timezone(timedelta(hours=9)))
+    time_max = time_min + timedelta(days=days)
+
+    events_result = service.events().list(
+        calendarId=calendar_id,
+        timeMin=time_min.isoformat(),
+        timeMax=time_max.isoformat(),
+        maxResults=days * 10,
+        singleEvents=True,
+        orderBy='startTime'
+    ).execute()
     events: list[dict[str, Any]] = events_result.get('items', [])
 
-    if not events:
-        print('No upcoming events found.')
-        return
-
-    pprint([(e["id"], e["start"]["dateTime"])
-           for e in events])
+    return events
 
 
-def create_events(creds: Credentials, event: dict[str, Any]):
+def delete_events(creds: Credentials, days: int, calendar_id: str):
+    pass
+
+
+def create_events(creds: Credentials, event: dict[str, Any], calendar_id: str):
     service = get_service(creds)
-    ret = service.events().insert(calendarId="primary", body=event).execute()
+    ret = service.events().insert(calendarId=calendar_id, body=event).execute()
     print(ret)
 
 
@@ -90,17 +96,21 @@ def main(from_json: str, to_json: str, start_time: datetime, duration: int):
     to_creds = get_credentials(
         to_json, "start authenticate process for TO calendar")
 
-    create_events(from_creds, {
-        "summary": "test",
-        "start": {
-            "dateTime": "2022-12-08T18:00:00",
-            "timeZone": "Asia/Tokyo"
-        },
-        "end": {
-            "dateTime": "2022-12-08T18:30:00",
-            "timeZone": "Asia/Tokyo"
-        }
-    })
+    events = list_events(from_creds, duration, "primary")
+    # delete_events(to_creds, duration, "jdsc-mirror")
+
+    to_cal_id = "3427b56b797a40bfe4a664440ac4116972f521d8b436fcc8c6776a2619f55e40@group.calendar.google.com"
+    for e in events[:1]:
+        pprint(e)
+        create_events(to_creds, {
+            "summary": e["summary"],
+            "start": e["start"],
+            "end": e["end"],
+            "description": "\n".join([
+                f"link: {e['htmlLink']}",
+                f"id: {e['id']}"
+            ])
+        }, to_cal_id)
 
 
 if __name__ == '__main__':
