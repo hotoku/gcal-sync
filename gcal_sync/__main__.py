@@ -45,7 +45,7 @@ def get_credentials(json_path: str, name: str) -> Credentials:
         creds.refresh(Request())
     else:
         LOGGER.error("credential for %s is not valid", name)
-        raise RuntimeError("credential for % is not valid" % name)
+        raise RuntimeError("credential for %s is not valid" % name)
         print(name)
         flow = InstalledAppFlow.from_client_secrets_file(
             json_path, scopes)
