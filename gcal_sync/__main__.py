@@ -5,6 +5,7 @@ import re
 from pprint import pprint
 from datetime import datetime, timedelta, timezone
 from typing import Any
+import dateutil.tz as dtz
 
 import click
 
@@ -52,10 +53,10 @@ def get_service(creds: Credentials):
     return ret
 
 
-def list_events(creds: Credentials, days: int, calendar_id: str) -> list[dict[str, Any]]:
+def list_events(creds: Credentials, start_time: datetime, days: int, calendar_id: str) -> list[dict[str, Any]]:
     service = get_service(creds)
 
-    time_min = datetime.now(tz=timezone(timedelta(hours=9)))
+    time_min = start_time
     time_max = time_min + timedelta(days=days)
 
     events_result = service.events().list(
@@ -71,46 +72,73 @@ def list_events(creds: Credentials, days: int, calendar_id: str) -> list[dict[st
     return events
 
 
-def delete_events(creds: Credentials, days: int, calendar_id: str):
-    pass
-
-
-def create_events(creds: Credentials, event: dict[str, Any], calendar_id: str):
+def delete_events(creds: Credentials, start_time: datetime, days: int, calendar_id: str):
     service = get_service(creds)
-    ret = service.events().insert(calendarId=calendar_id, body=event).execute()
-    print(ret)
+
+    def callback(id, _, ex):
+        if ex is not None:
+            print("delete exception: ", id, e)
+        else:
+            print("delete success: ", id)
+
+    batch = service.new_batch_http_request(callback=callback)
+    events = list_events(creds, start_time, days, calendar_id)
+    for e in events:
+        batch.add(service.events().delete(
+            calendarId=calendar_id,
+            eventId=e["id"]
+        ))
+    batch.execute()
+
+
+def create_events(creds: Credentials, events: list[dict[str, Any]], calendar_id: str):
+    service = get_service(creds)
+
+    def callback(id, _, ex):
+        if ex is not None:
+            print("create exception: ", id, e)
+        else:
+            print("create success: ", id)
+
+    batch = service.new_batch_http_request(callback=callback)
+    for e in events:
+        batch.add(service.events().insert(
+            calendarId=calendar_id,
+            body={
+                "summary": e["summary"],
+                "start": e["start"],
+                "end": e["end"],
+                "description": "\n".join([
+                    f"link: {e['htmlLink']}",
+                    f"id: {e['id']}"
+                ])
+            }))
+    batch.execute()
+
+    service = get_service(creds)
 
 
 @click.command()
 @click.argument("from_json", type=click.Path(exists=True, dir_okay=False))
 @click.argument("to_json", type=click.Path(exists=True, dir_okay=False))
+@click.argument("from_id", type=str)
+@click.argument("to_id", type=str)
 @click.option("--start_time", type=click.DateTime(),
-              default=datetime.now(),
+              default=datetime.now(tz=dtz.gettz("Asia/Tokyo")),
               help="start time of synchronized interval. default to current time.")
 @click.option("--duration", type=int,
               default=30,
               help="duration of synchronized interval in days. default to 30.")
-def main(from_json: str, to_json: str, start_time: datetime, duration: int):
+def main(from_json: str, to_json: str, from_id: str, to_id: str,
+         start_time: datetime, duration: int):
     from_creds = get_credentials(
         from_json, "start authenticate process for FROM calendar")
     to_creds = get_credentials(
         to_json, "start authenticate process for TO calendar")
 
-    events = list_events(from_creds, duration, "primary")
-    # delete_events(to_creds, duration, "jdsc-mirror")
-
-    to_cal_id = "3427b56b797a40bfe4a664440ac4116972f521d8b436fcc8c6776a2619f55e40@group.calendar.google.com"
-    for e in events[:1]:
-        pprint(e)
-        create_events(to_creds, {
-            "summary": e["summary"],
-            "start": e["start"],
-            "end": e["end"],
-            "description": "\n".join([
-                f"link: {e['htmlLink']}",
-                f"id: {e['id']}"
-            ])
-        }, to_cal_id)
+    delete_events(to_creds, start_time, duration, to_id)
+    events = list_events(from_creds, start_time, duration, from_id)
+    create_events(to_creds, events, to_id)
 
 
 if __name__ == '__main__':
