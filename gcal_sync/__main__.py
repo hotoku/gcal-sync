@@ -2,7 +2,12 @@ from __future__ import print_function
 
 import datetime
 import os
+from os.path import exists
 from pprint import pprint
+from datetime import datetime
+
+import click
+from google.auth import default
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -17,7 +22,7 @@ TOKEN_PATH = os.path.join(os.getcwd(), "credentials/token.json")
 CLIENT_KEY_PATH = os.path.join(os.getcwd(), "credentials/gcal_sync.json")
 
 
-def main():
+def print_calendar_example():
     """Shows basic usage of the Google Calendar API.
     Prints the start and name of the next 10 events on the user's calendar.
     """
@@ -59,6 +64,24 @@ def main():
 
     except HttpError as error:
         print('An error occurred: %s' % error)
+
+
+def get_credentials(json_path: str) -> Credentials:
+    pass
+
+
+@click.command()
+@click.argument("from_json", type=click.File())
+@click.argument("to_json", type=click.File())
+@click.option("--start_time", type=click.DateTime(),
+              default=datetime.now(),
+              help="start time of synchronized interval. default to current time.")
+@click.option("--duration", type=int,
+              default=30,
+              help="duration of synchronized interval in days. default to 30.")
+def main(from_json: str, to_json: str, start_time: datetime, duration: int):
+    from_creds = get_credentials(from_json)
+    to_creds = get_credentials(to_json)
 
 
 if __name__ == '__main__':
