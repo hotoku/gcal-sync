@@ -1,0 +1,35 @@
+#!/bin/bash -x
+
+
+date +"[%Y-%m-%d %H:%M:%S] copy start"
+
+
+SECRET=~/.ssh/jdsc_gcp
+HISTORY_DIR=$(pwd)/history
+
+
+if ! [[ -d ${HISTORY_DIR} ]]; then
+    mkdir ${HISTORY_DIR};
+    cd ${HISTORY_DIR};
+    git init
+    touch .zsh_history
+    git add .
+    git commit -m "init"
+fi
+
+
+# . /usr/local/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/path.bash.inc
+. /opt/homebrew/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/path.bash.inc
+. ../.envrc
+gcloud \
+    compute scp \
+    hotoku@{{INSTANCE_NAME}}:'~/.zsh_history' ${HISTORY_DIR}/.zsh_history \
+    --ssh-key-file=${SECRET} \
+    --project={{INSTANCE_PROJECT}} \
+    --zone={{PYTHON_GCE_ZONE}}
+
+
+cd ${HISTORY_DIR}
+if git status -s | grep -E "M .zsh_history"; then
+    git commit -am "commit"
+fi

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <key>Label</key>
+    <string>info.hotoku.gce.copy-history</string>
+    <key>ProgramArguments</key>
+    <array>
+      <string>{{HOTOKU_GCE_WORKDIR}}/run</string>
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>StandardErrorPath</key>
+    <string>{{HOTOKU_GCE_WORKDIR}}/stderr</string>
+    <key>StandardOutPath</key>
+    <string>{{HOTOKU_GCE_WORKDIR}}/stdout</string>
+    <key>WorkingDirectory</key>
+    <string>{{HOTOKU_GCE_WORKDIR}}</string>
+    <key>StartInterval</key>
+    <integer>60</integer>
+  </dict>
+</plist>
