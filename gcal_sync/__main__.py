@@ -2,8 +2,7 @@ from __future__ import print_function
 
 import os
 import re
-from pprint import pprint
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from typing import Any
 import dateutil.tz as dtz
 
@@ -12,7 +11,7 @@ import click
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
-from googleapiclient.discovery import build, Resource
+from googleapiclient.discovery import build
 
 
 def secret2token(json_path: str) -> str:
@@ -74,34 +73,37 @@ def list_events(creds: Credentials, start_time: datetime, days: int, calendar_id
 
 def delete_events(creds: Credentials, start_time: datetime, days: int, calendar_id: str):
     service = get_service(creds)
+    id2event = {}
 
     def callback(id, _, ex):
         if ex is not None:
-            print("delete exception: ", id, e)
+            print("delete exception: ", id2event[id]["id"], ex)
         else:
-            print("delete success: ", id)
+            print("delete success: ", id2event[id]["id"])
 
     batch = service.new_batch_http_request(callback=callback)
     events = list_events(creds, start_time, days, calendar_id)
-    for e in events:
+    for i, e in enumerate(events):
         batch.add(service.events().delete(
             calendarId=calendar_id,
             eventId=e["id"]
         ))
+        id2event[str(i + 1)] = e
     batch.execute()
 
 
 def create_events(creds: Credentials, events: list[dict[str, Any]], calendar_id: str):
     service = get_service(creds)
+    id2event = {}
 
     def callback(id, _, ex):
         if ex is not None:
-            print("create exception: ", id, e)
+            print("create exception: ", id2event[id]["id"], ex)
         else:
-            print("create success: ", id)
+            print("create success: ", id2event[id]["id"])
 
     batch = service.new_batch_http_request(callback=callback)
-    for e in events:
+    for i, e in enumerate(events):
         batch.add(service.events().insert(
             calendarId=calendar_id,
             body={
@@ -113,9 +115,8 @@ def create_events(creds: Credentials, events: list[dict[str, Any]], calendar_id:
                     f"id: {e['id']}"
                 ])
             }))
+        id2event[str(i + 1)] = e
     batch.execute()
-
-    service = get_service(creds)
 
 
 @click.command()
