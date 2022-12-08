@@ -3,20 +3,20 @@
 <plist version="1.0">
   <dict>
     <key>Label</key>
-    <string>info.hotoku.gce.copy-history</string>
+    <string>{{PLIST_NAME}}</string>
     <key>ProgramArguments</key>
     <array>
-      <string>{{HOTOKU_GCE_WORKDIR}}/run</string>
+      <string>{{WORKDIR}}/run</string>
     </array>
     <key>RunAtLoad</key>
     <true/>
     <key>StandardErrorPath</key>
-    <string>{{HOTOKU_GCE_WORKDIR}}/stderr</string>
+    <string>{{WORKDIR}}/stderr</string>
     <key>StandardOutPath</key>
-    <string>{{HOTOKU_GCE_WORKDIR}}/stdout</string>
+    <string>{{WORKDIR}}/stdout</string>
     <key>WorkingDirectory</key>
-    <string>{{HOTOKU_GCE_WORKDIR}}</string>
+    <string>{{WORKDIR}}</string>
     <key>StartInterval</key>
-    <integer>60</integer>
+    <integer>900</integer>
   </dict>
 </plist>

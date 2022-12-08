@@ -1,6 +1,4 @@
 .envrc
-info.hotoku.gce.copy-history.plist
+info.hotoku.gcal-sync.plist
 stdout
 stderr
-history/
-run

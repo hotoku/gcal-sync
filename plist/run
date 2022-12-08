@@ -1,0 +1,6 @@
+#!/bin/bash -x
+
+
+START_TIME=$(date +"[%Y-%m-%d %H:%M:%S] copy start")
+
+echo ${START_TIME} | tee /dev/stderr
