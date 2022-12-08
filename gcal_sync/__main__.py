@@ -4,14 +4,23 @@ import os
 import re
 from datetime import datetime, timedelta
 from typing import Any
-import dateutil.tz as dtz
+import logging
 
+
+import dateutil.tz as dtz
 import click
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
+
+LOGGER = logging.getLogger(__name__)
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s - (pid: %(process)d) - %(threadName)s"
+)
 
 
 def secret2token(json_path: str) -> str:
@@ -21,7 +30,7 @@ def secret2token(json_path: str) -> str:
     return os.path.join(dir_name, body + "-token.json")
 
 
-def get_credentials(json_path: str, message: str) -> Credentials:
+def get_credentials(json_path: str, name: str) -> Credentials:
     scopes = ['https://www.googleapis.com/auth/calendar']
 
     token_path = secret2token(json_path)
@@ -35,7 +44,9 @@ def get_credentials(json_path: str, message: str) -> Credentials:
     if creds is not None and creds.expired and creds.refresh_token:
         creds.refresh(Request())
     else:
-        print(message)
+        LOGGER.error("credential for %s is not valid", name)
+        raise RuntimeError("credential for % is not valid" % name)
+        print(name)
         flow = InstalledAppFlow.from_client_secrets_file(
             json_path, scopes)
         creds = flow.run_local_server(port=0)
@@ -71,17 +82,23 @@ def list_events(creds: Credentials, start_time: datetime, days: int, calendar_id
     return events
 
 
+def http_callback(action: str, id2event: dict[str, dict[str, Any]]):
+    def callback(id, _, ex):
+        event = id2event[id]
+        msg = f"""{action} id={event["id"]} summary={event["summary"]} start={event["start"]}"""
+        if ex is not None:
+            LOGGER.warning("exception=%s %s", ex, msg)
+        else:
+            LOGGER.info(msg)
+    return callback
+
+
 def delete_events(creds: Credentials, start_time: datetime, days: int, calendar_id: str):
     service = get_service(creds)
     id2event = {}
 
-    def callback(id, _, ex):
-        if ex is not None:
-            print("delete exception: ", id2event[id]["id"], ex)
-        else:
-            print("delete success: ", id2event[id]["id"])
-
-    batch = service.new_batch_http_request(callback=callback)
+    batch = service.new_batch_http_request(
+        callback=http_callback("delete", id2event))
     events = list_events(creds, start_time, days, calendar_id)
     for i, e in enumerate(events):
         batch.add(service.events().delete(
@@ -96,13 +113,8 @@ def create_events(creds: Credentials, events: list[dict[str, Any]], calendar_id:
     service = get_service(creds)
     id2event = {}
 
-    def callback(id, _, ex):
-        if ex is not None:
-            print("create exception: ", id2event[id]["id"], ex)
-        else:
-            print("create success: ", id2event[id]["id"])
-
-    batch = service.new_batch_http_request(callback=callback)
+    batch = service.new_batch_http_request(
+        callback=http_callback("create", id2event))
     for i, e in enumerate(events):
         batch.add(service.events().insert(
             calendarId=calendar_id,
