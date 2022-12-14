@@ -17,10 +17,12 @@ from googleapiclient.discovery import build
 
 LOGGER = logging.getLogger(__name__)
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s - (pid: %(process)d) - %(threadName)s"
-)
+
+def setup_logger(debug: bool = False):
+    logging.basicConfig(
+        level=logging.DEBUG if debug else logging.WARNING,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s - (pid: %(process)d) - %(threadName)s"
+    )
 
 
 def secret2token(json_path: str) -> str:
@@ -158,6 +160,7 @@ def main():
               help="duration of synchronized interval in days. default to 30.")
 def run(from_json: str, to_json: str, from_id: str, to_id: str,
         start_time: datetime, duration: int):
+    setup_logger(debug=False)
     from_creds = get_credentials(
         from_json, "FROM")
     to_creds = get_credentials(
