@@ -123,6 +123,7 @@ def delete_events(creds: Credentials, start_time: datetime, days: int, calendar_
 def create_events(creds: Credentials, events: list[dict[str, Any]], calendar_id: str):
     service = get_service(creds)
     id2event = {}
+    update_time = str(datetime.now())
 
     batch = service.new_batch_http_request(
         callback=http_callback("create", id2event))
@@ -135,7 +136,8 @@ def create_events(creds: Credentials, events: list[dict[str, Any]], calendar_id:
                 "end": e["end"],
                 "description": "\n".join([
                     f"link: {e['htmlLink']}",
-                    f"id: {e['id']}"
+                    f"id: {e['id']}",
+                    f"update: {update_time}"
                 ])
             }))
         id2event[str(i + 1)] = e
