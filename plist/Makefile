@@ -13,7 +13,8 @@ all: load run $(LOGCONF_DEST)
 .PHONY: clean
 clean: unload
 	@echo making $@
-	rm -f $(PLIST_NAME).plist stdout stderr $(LOGCONF_DEST)
+	rm -f $(PLIST_NAME).plist
+	sudo rm -f $(LOGCONF_DEST)
 
 
 .PHONY: load
