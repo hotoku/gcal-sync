@@ -21,7 +21,8 @@ ME:$(ME_CAL_ID)
 credentials:
 	python -m gcal_sync $(CRED_DIR) \
 		$(CRED_DIR)/gcal-sync-001.json \
-		$(CRED_DIR)
+		$(CRED_DIR) \
+		JDSC,ME
 
 
 .PHONY: clean
