@@ -165,15 +165,19 @@ def delete_events(creds: Credentials, start_time: datetime, days: int, calendar_
             LOGGER.info("not deleted %s", info)
             continue
         LOGGER.info("""deleting %s""", info)
-        batch.add(service.events().delete(
-            calendarId=calendar_id,
-            eventId=e["id"]
-        ))
-        id2event[str(i + 1)] = e
+        req_id = str(i+1)
+        batch.add(
+            service.events().delete(
+                calendarId=calendar_id,
+                eventId=e["id"]
+            ),
+            request_id=req_id
+        )
+        id2event[req_id] = e
     batch.execute()
 
 
-def create_events(creds: Credentials, events: list[dict[str, Any]], calendar_id: str):
+def create_events(creds: Credentials, events: list[dict[str, Any]], calendar_id: str, mask: bool):
     service = get_service(creds)
     id2event = {}
     update_time = str(datetime.now())
@@ -181,11 +185,11 @@ def create_events(creds: Credentials, events: list[dict[str, Any]], calendar_id:
     batch = service.new_batch_http_request(
         callback=http_callback("create", id2event))
     for i, e in enumerate(events):
+        name = e["GCAL_SYNC_CALNAME"]
         batch.add(service.events().insert(
             calendarId=calendar_id,
             body={
-                # "summary": e["summary"],
-                "summary": "BLOCK",
+                "summary": name + ":" + (e["summary"] if not mask else "BLOCK"),
                 "start": e["start"],
                 "end": e["end"],
                 "description": "\n".join([
@@ -218,13 +222,20 @@ def run(cred_dir: str,
         start_time: datetime, duration: int):
     setup_logger(debug=False)
 
+    events = []
     for cal in cals:
         creds = get_credentials(cred_dir, cal.name)
         delete_events(creds, start_time, duration, cal.id)
-
-    # delete_events(to_creds, start_time, duration, to_id)
-    # events = list_events(from_creds, start_time, duration, from_id)
-    # create_events(to_creds, events, to_id)
+        events2 = list_events(creds, start_time, duration, cal.id)
+        for e in events2:
+            e["GCAL_SYNC_CALNAME"] = cal.name
+        events += events2
+    for cal in cals:
+        creds = get_credentials(cred_dir, cal.name)
+        events2 = [
+            e for e in events if not e["GCAL_SYNC_CALNAME"] == cal.name
+        ]
+        create_events(creds, events2, cal.id, True)
 
 
 @main.command()
