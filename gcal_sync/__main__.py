@@ -45,7 +45,7 @@ class CalendarList(click.ParamType):
 
     def convert(
         self, value: Any, param: Optional[click.Parameter], ctx: Optional[click.Context]
-    ) -> Any:
+    ) -> list[Calendar]:
         if isinstance(value, str):
             ss = value.split(",")
             return list(map(Calendar.parse, ss))
@@ -53,6 +53,23 @@ class CalendarList(click.ParamType):
             return value
         if param is None and ctx is None:
             return []
+        assert False, "panic. CalendarList.convert"
+
+
+class CalendarIdList(click.ParamType):
+    name = "CalendarIdList"
+
+    def convert(
+        self, value: Any, param: Optional[click.Parameter], ctx: Optional[click.Context]
+    ) -> list[str]:
+        if isinstance(value, str):
+            ss = value.split(",")
+            return ss
+        if isinstance(value, list):
+            return value
+        if param is None and ctx is None:
+            return []
+        assert False, "panic. CalendarList.convert"
 
 
 def access_token_path(dir_name: str, name: str) -> str:
@@ -211,9 +228,15 @@ def run(cred_dir: str,
 @main.command()
 @click.argument("client_json", type=click.Path(exists=True, dir_okay=False))
 @click.argument("cred_dir", type=click.Path(exists=True, file_okay=False, writable=True))
-def credentials(client_json: str, cred_dir: str):
-    make_access_token(client_json, cred_dir, "JDSC")
-    make_access_token(client_json, cred_dir, "ME")
+@click.argument("ids", type=CalendarIdList())
+def credentials(client_json: str, cred_dir: str, ids: list[str]):
+    for id_ in ids:
+        ret = input(
+            f"We are going to get access token for calendar {id_}. (Y/n): ")
+        if not (ret == "" or ret == "Y"):
+            print("stopping.")
+            return
+        make_access_token(client_json, cred_dir, id_)
 
 
 if __name__ == '__main__':
