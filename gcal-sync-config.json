@@ -1,0 +1,22 @@
+{
+  "calendars": [
+    {
+      "name": "ME",
+      "id": "primary",
+      "read": true,
+      "write": true
+    },
+    {
+      "name": "JDSC",
+      "id": "primary",
+      "read": true,
+      "write": true
+    },
+    {
+      "name": "ATTTA",
+      "id": "primary",
+      "read": true,
+      "write": true
+    }
+  ]
+}

@@ -1,7 +1,9 @@
 from __future__ import print_function
+import json
 
 import os
 from datetime import datetime, timedelta
+from os.path import exists
 import sys
 from typing import Any, Optional
 import logging
@@ -241,15 +243,18 @@ def run(cred_dir: str,
 @main.command()
 @click.argument("client_json", type=click.Path(exists=True, dir_okay=False))
 @click.argument("cred_dir", type=click.Path(exists=True, file_okay=False, writable=True))
-@click.argument("ids", type=CalendarIdList())
-def credentials(client_json: str, cred_dir: str, ids: list[str]):
-    for id_ in ids:
+def credentials(client_json: str, cred_dir: str):
+    with open("gcal-sync-config.json") as fp:
+        conf = json.load(fp)
+
+    for info in conf["calendars"]:
+        name = info["name"]
         ret = input(
-            f"We are going to get access token for calendar {id_}. (Y/n): ")
+            f"We are going to get access token for calendar {name}. (Y/n): ")
         if not (ret == "" or ret == "Y"):
             print("stopping.")
             return
-        make_access_token(client_json, cred_dir, id_)
+        make_access_token(client_json, cred_dir, name)
 
 
 if __name__ == '__main__':
