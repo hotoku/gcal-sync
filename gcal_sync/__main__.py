@@ -112,7 +112,7 @@ def delete_events(creds: Credentials, start_time: datetime, days: int, calendar_
         callback=http_callback("delete", id2event))
     events = list_events(creds, start_time, days, calendar_id)
     for i, e in enumerate(events):
-        LOGGER.info("% will be deleted", e)
+        LOGGER.info("%s will be deleted", e)
         batch.add(service.events().delete(
             calendarId=calendar_id,
             eventId=e["id"]
