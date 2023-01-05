@@ -1,9 +1,8 @@
 from __future__ import print_function
 
 import os
-from os.path import exists
-import re
 from datetime import datetime, timedelta
+import sys
 from typing import Any, Optional
 import logging
 from dataclasses import dataclass
@@ -22,10 +21,13 @@ MARK = "GCAL_SYNC: LKfDbxtwFlL+fQHe38DJkWbhh5lugPUI8wQaMwBAoeZUAbak"
 
 
 def setup_logger(debug: bool = False):
-    logging.basicConfig(
-        level=logging.DEBUG if debug else logging.INFO,
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s - (pid: %(process)d) - %(threadName)s"
-    )
+    fmt = "%(asctime)s - %(name)s - %(levelname)s - %(message)s - (pid: %(process)d) - %(threadName)s"
+    fmter = logging.Formatter(fmt)
+    handler = logging.StreamHandler(sys.stderr)
+    handler.setFormatter(fmter)
+    level = logging.DEBUG if debug else logging.INFO
+    LOGGER.setLevel(level)
+    LOGGER.addHandler(handler)
 
 
 @dataclass
@@ -158,11 +160,11 @@ def delete_events(creds: Credentials, start_time: datetime, days: int, calendar_
         callback=http_callback("delete", id2event))
     events = list_events(creds, start_time, days, calendar_id)
     for i, e in enumerate(events):
-        if "description" in e and not MARK in e["description"]:
+        info = f"id={e['id']} summary={e['summary']} start={e['start']}"
+        if not ("description" in e and MARK in e["description"]):
+            LOGGER.info("not deleted %s", info)
             continue
-        LOGGER.info(
-            """deleting id=%s summary=%s start=%s""",
-            e["id"], e["summary"], e["start"])
+        LOGGER.info("""deleting %s""", info)
         batch.add(service.events().delete(
             calendarId=calendar_id,
             eventId=e["id"]
