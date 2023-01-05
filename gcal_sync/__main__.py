@@ -17,6 +17,7 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 
 LOGGER = logging.getLogger(__name__)
+MARK = "GCAL_SYNC: LKfDbxtwFlL+fQHe38DJkWbhh5lugPUI8wQaMwBAoeZUAbak"
 
 
 def setup_logger(debug: bool = False):
@@ -132,13 +133,15 @@ def create_events(creds: Credentials, events: list[dict[str, Any]], calendar_id:
         batch.add(service.events().insert(
             calendarId=calendar_id,
             body={
-                "summary": e["summary"],
+                # "summary": e["summary"],
+                "summary": "BLOCK",
                 "start": e["start"],
                 "end": e["end"],
                 "description": "\n".join([
                     f"link: {e['htmlLink']}",
                     f"id: {e['id']}",
-                    f"update: {update_time}"
+                    f"update: {update_time}",
+                    MARK
                 ])
             }))
         id2event[str(i + 1)] = e
