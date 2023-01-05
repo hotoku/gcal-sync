@@ -4,8 +4,9 @@ import os
 from os.path import exists
 import re
 from datetime import datetime, timedelta
-from typing import Any
+from typing import Any, Optional
 import logging
+from dataclasses import dataclass
 
 
 import dateutil.tz as dtz
@@ -25,6 +26,33 @@ def setup_logger(debug: bool = False):
         level=logging.DEBUG if debug else logging.INFO,
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s - (pid: %(process)d) - %(threadName)s"
     )
+
+
+@dataclass
+class Calendar:
+    name: str
+    id: str
+
+    @classmethod
+    def parse(cls, s: str) -> "Calendar":
+        ss = s.split(":")
+        assert len(ss) == 2, f"invalid format: {s}"
+        return cls(*ss)
+
+
+class CalendarList(click.ParamType):
+    name = "CalendarList"
+
+    def convert(
+        self, value: Any, param: Optional[click.Parameter], ctx: Optional[click.Context]
+    ) -> Any:
+        if isinstance(value, str):
+            ss = value.split(",")
+            return list(map(Calendar.parse, ss))
+        if isinstance(value, list):
+            return value
+        if param is None and ctx is None:
+            return []
 
 
 def access_token_path(dir_name: str, name: str) -> str:
@@ -157,8 +185,7 @@ def main():
 
 @main.command()
 @click.argument("cred_dir", type=click.Path(exists=True, file_okay=False))
-@click.argument("from_id", type=str)
-@click.argument("to_id", type=str)
+@click.argument("cals", type=CalendarList())
 @click.option("--start_time", type=click.DateTime(),
               default=datetime.now(tz=dtz.gettz("Asia/Tokyo")),
               help="start time of synchronized interval. default to current time.")
@@ -166,8 +193,10 @@ def main():
               default=30,
               help="duration of synchronized interval in days. default to 30.")
 def run(cred_dir: str,
-        from_id: str, to_id: str,
+        cals: list[Calendar],
         start_time: datetime, duration: int):
+    import pdb
+    pdb.set_trace()
     setup_logger(debug=False)
     from_creds = get_credentials(
         cred_dir, "JDSC")

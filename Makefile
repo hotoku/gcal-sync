@@ -2,8 +2,8 @@
 all:
 	python -m gcal_sync run \
 		credentials \
-		primary \
-		3427b56b797a40bfe4a664440ac4116972f521d8b436fcc8c6776a2619f55e40@group.calendar.google.com
+JDSC:primary,\
+ME:3427b56b797a40bfe4a664440ac4116972f521d8b436fcc8c6776a2619f55e40@group.calendar.google.com
 
 
 .PHONY: credentials
