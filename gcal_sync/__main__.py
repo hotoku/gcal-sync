@@ -141,9 +141,11 @@ def delete_events(creds: Credentials, start_time: datetime, days: int, calendar_
         callback=http_callback("delete", id2event))
     events = list_events(creds, start_time, days, calendar_id)
     for i, e in enumerate(events):
-        if not MARK in e["description"]:
+        if "description" in e and not MARK in e["description"]:
             continue
-        LOGGER.info("%s will be deleted", e)
+        LOGGER.info(
+            """deleting id=%s summary=%s start=%s""",
+            e["id"], e["summary"], e["start"])
         batch.add(service.events().delete(
             calendarId=calendar_id,
             eventId=e["id"]
@@ -195,17 +197,15 @@ def main():
 def run(cred_dir: str,
         cals: list[Calendar],
         start_time: datetime, duration: int):
-    import pdb
-    pdb.set_trace()
     setup_logger(debug=False)
-    from_creds = get_credentials(
-        cred_dir, "JDSC")
-    to_creds = get_credentials(
-        cred_dir, "ME")
 
-    delete_events(to_creds, start_time, duration, to_id)
-    events = list_events(from_creds, start_time, duration, from_id)
-    create_events(to_creds, events, to_id)
+    for cal in cals:
+        creds = get_credentials(cred_dir, cal.name)
+        delete_events(creds, start_time, duration, cal.id)
+
+    # delete_events(to_creds, start_time, duration, to_id)
+    # events = list_events(from_creds, start_time, duration, from_id)
+    # create_events(to_creds, events, to_id)
 
 
 @main.command()
