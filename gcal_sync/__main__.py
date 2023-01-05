@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 import os
+from os.path import exists
 import re
 from datetime import datetime, timedelta
 from typing import Any
@@ -20,7 +21,7 @@ LOGGER = logging.getLogger(__name__)
 
 def setup_logger(debug: bool = False):
     logging.basicConfig(
-        level=logging.DEBUG if debug else logging.WARNING,
+        level=logging.DEBUG if debug else logging.INFO,
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s - (pid: %(process)d) - %(threadName)s"
     )
 
@@ -46,6 +47,8 @@ def get_credentials(cred_dir: str, name: str) -> Credentials:
             token.write(creds.to_json())
 
     else:
+        import pdb
+        pdb.set_trace()
         raise RuntimeError("credential for %s is not valid" % name)
 
     return creds
@@ -109,6 +112,7 @@ def delete_events(creds: Credentials, start_time: datetime, days: int, calendar_
         callback=http_callback("delete", id2event))
     events = list_events(creds, start_time, days, calendar_id)
     for i, e in enumerate(events):
+        LOGGER.info("% will be deleted", e)
         batch.add(service.events().delete(
             calendarId=calendar_id,
             eventId=e["id"]
@@ -147,7 +151,7 @@ def main():
 
 
 @main.command()
-@click.argument("client_json", type=click.Path(exists=True, dir_okay=False))
+@click.argument("cred_dir", type=click.Path(exists=True, file_okay=False))
 @click.argument("from_id", type=str)
 @click.argument("to_id", type=str)
 @click.option("--start_time", type=click.DateTime(),
@@ -156,13 +160,14 @@ def main():
 @click.option("--duration", type=int,
               default=30,
               help="duration of synchronized interval in days. default to 30.")
-def run(client_json: str, from_id: str, to_id: str,
+def run(cred_dir: str,
+        from_id: str, to_id: str,
         start_time: datetime, duration: int):
     setup_logger(debug=False)
     from_creds = get_credentials(
-        client_json, "FROM")
+        cred_dir, "JDSC")
     to_creds = get_credentials(
-        client_json, "TO")
+        cred_dir, "ME")
 
     delete_events(to_creds, start_time, duration, to_id)
     events = list_events(from_creds, start_time, duration, from_id)
