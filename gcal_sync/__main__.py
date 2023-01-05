@@ -25,17 +25,14 @@ def setup_logger(debug: bool = False):
     )
 
 
-def secret2token(json_path: str) -> str:
-    dir_name = os.path.dirname(json_path)
-    base_name = os.path.basename(json_path)
-    body = re.sub(r"\.[^\.]+$", "", base_name)
-    return os.path.join(dir_name, body + "-token.json")
+def access_token_path(dir_name: str, name: str) -> str:
+    return os.path.join(dir_name, name + "-token.json")
 
 
-def get_credentials(json_path: str, name: str) -> Credentials:
+def get_credentials(cred_dir: str, name: str) -> Credentials:
     scopes = ['https://www.googleapis.com/auth/calendar']
 
-    token_path = secret2token(json_path)
+    token_path = access_token_path(cred_dir, name)
     creds = None
     if os.path.exists(token_path):
         creds = Credentials.from_authorized_user_file(token_path, scopes)
@@ -54,17 +51,17 @@ def get_credentials(json_path: str, name: str) -> Credentials:
     return creds
 
 
-def make_token(json_path: str, name: str):
+def make_access_token(client_token_path: str, cred_dir: str, name: str):
     scopes = ['https://www.googleapis.com/auth/calendar']
 
     print(f"start making token for {name}")
     flow = InstalledAppFlow.from_client_secrets_file(
-        json_path, scopes)
+        client_token_path, scopes)
     creds = flow.run_local_server(port=0)
     if not isinstance(creds, Credentials):
         raise RuntimeError("unknown result from run_local_server")
 
-    token_path = secret2token(json_path)
+    token_path = access_token_path(cred_dir, name)
     with open(token_path, 'w') as token:
         token.write(creds.to_json())
 
@@ -150,8 +147,7 @@ def main():
 
 
 @main.command()
-@click.argument("from_json", type=click.Path(exists=True, dir_okay=False))
-@click.argument("to_json", type=click.Path(exists=True, dir_okay=False))
+@click.argument("client_json", type=click.Path(exists=True, dir_okay=False))
 @click.argument("from_id", type=str)
 @click.argument("to_id", type=str)
 @click.option("--start_time", type=click.DateTime(),
@@ -160,13 +156,13 @@ def main():
 @click.option("--duration", type=int,
               default=30,
               help="duration of synchronized interval in days. default to 30.")
-def run(from_json: str, to_json: str, from_id: str, to_id: str,
+def run(client_json: str, from_id: str, to_id: str,
         start_time: datetime, duration: int):
     setup_logger(debug=False)
     from_creds = get_credentials(
-        from_json, "FROM")
+        client_json, "FROM")
     to_creds = get_credentials(
-        to_json, "TO")
+        client_json, "TO")
 
     delete_events(to_creds, start_time, duration, to_id)
     events = list_events(from_creds, start_time, duration, from_id)
@@ -174,11 +170,11 @@ def run(from_json: str, to_json: str, from_id: str, to_id: str,
 
 
 @main.command()
-@click.argument("from_json", type=click.Path(exists=True, dir_okay=False))
-@click.argument("to_json", type=click.Path(exists=True, dir_okay=False))
-def credentials(from_json: str, to_json: str):
-    make_token(from_json, "FROM")
-    make_token(to_json, "TO")
+@click.argument("client_json", type=click.Path(exists=True, dir_okay=False))
+@click.argument("cred_dir", type=click.Path(exists=True, file_okay=False, writable=True))
+def credentials(client_json: str, cred_dir: str):
+    make_access_token(client_json, cred_dir, "JDSC")
+    make_access_token(client_json, cred_dir, "ME")
 
 
 if __name__ == '__main__':
