@@ -98,8 +98,6 @@ def get_credentials(cred_dir: str, name: str) -> Credentials:
             token.write(creds.to_json())
 
     else:
-        import pdb
-        pdb.set_trace()
         raise RuntimeError("credential for %s is not valid" % name)
 
     return creds
