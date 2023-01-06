@@ -206,8 +206,13 @@ def create_events(creds: Credentials, events: list[dict[str, Any]], calendar_id:
     batch.execute()
 
 
-def notify_error(msg: str):
-    url = "https://hooks.slack.com/services/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"
+def read_url(cred_dir: str) -> str:
+    with open(os.path.join(cred_dir, "incoming-webhook.json")) as fp:
+        data = json.load(fp)
+    return data["url"]
+
+
+def notify_error(msg: str, url: str):
     requests.post(
         url,
         data=json.dumps({
@@ -239,6 +244,7 @@ def run(cred_dir: str,
     setup_logger(debug=False)
 
     try:
+        assert False, "fuga"
         events = []
         for cal in cals:
             creds = get_credentials(cred_dir, cal.name)
@@ -259,7 +265,7 @@ def run(cred_dir: str,
         traceback.print_exception(e, file=sio)
         msg = sio.getvalue()
         LOGGER.error(msg)
-        notify_error(msg)
+        notify_error(msg, read_url(cred_dir))
 
 
 @main.command()
