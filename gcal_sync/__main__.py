@@ -235,7 +235,8 @@ def run(cred_dir: str,
         events2 = [
             e for e in events if not e["GCAL_SYNC_CALNAME"] == cal.name
         ]
-        create_events(creds, events2, cal.id, True)
+        mask = cal.name != "ME"
+        create_events(creds, events2, cal.id, mask)
 
 
 @main.command()
