@@ -6,7 +6,10 @@ import sys
 from typing import Any, Optional
 import logging
 from dataclasses import dataclass
-
+import traceback
+import io
+import requests
+import json
 
 import dateutil.tz as dtz
 import click
@@ -203,6 +206,19 @@ def create_events(creds: Credentials, events: list[dict[str, Any]], calendar_id:
     batch.execute()
 
 
+def notify_error(msg: str):
+    url = "https://hooks.slack.com/services/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"
+    requests.post(
+        url,
+        data=json.dumps({
+            "text": msg
+        }),
+        headers={
+            "Content-type": "application/json"
+        }
+    )
+
+
 @click.group()
 def main():
     pass
@@ -222,21 +238,28 @@ def run(cred_dir: str,
         start_time: datetime, duration: int):
     setup_logger(debug=False)
 
-    events = []
-    for cal in cals:
-        creds = get_credentials(cred_dir, cal.name)
-        delete_events(creds, start_time, duration, cal.id)
-        events2 = list_events(creds, start_time, duration, cal.id)
-        for e in events2:
-            e["GCAL_SYNC_CALNAME"] = cal.name
-        events += events2
-    for cal in cals:
-        creds = get_credentials(cred_dir, cal.name)
-        events2 = [
-            e for e in events if not e["GCAL_SYNC_CALNAME"] == cal.name
-        ]
-        mask = cal.name != "ME"
-        create_events(creds, events2, cal.id, mask)
+    try:
+        events = []
+        for cal in cals:
+            creds = get_credentials(cred_dir, cal.name)
+            delete_events(creds, start_time, duration, cal.id)
+            events2 = list_events(creds, start_time, duration, cal.id)
+            for e in events2:
+                e["GCAL_SYNC_CALNAME"] = cal.name
+            events += events2
+        for cal in cals:
+            creds = get_credentials(cred_dir, cal.name)
+            events2 = [
+                e for e in events if not e["GCAL_SYNC_CALNAME"] == cal.name
+            ]
+            mask = cal.name != "ME"
+            create_events(creds, events2, cal.id, mask)
+    except Exception as e:
+        sio = io.StringIO()
+        traceback.print_exception(e, file=sio)
+        msg = sio.getvalue()
+        LOGGER.error(msg)
+        notify_error(msg)
 
 
 @main.command()
