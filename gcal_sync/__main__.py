@@ -244,7 +244,6 @@ def run(cred_dir: str,
     setup_logger(debug=False)
 
     try:
-        assert False, "fuga"
         events = []
         for cal in cals:
             creds = get_credentials(cred_dir, cal.name)
