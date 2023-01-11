@@ -1,5 +1,6 @@
 # ログローテーションの設定
 
-# logfilename          [owner:group]    mode count size when  flags [/pid_file] [sig_num]
-{{PWD}}/stderr.log 640 5 3000000 * JN
-{{PWD}}/stdout.log 640 5 1000 * JN
+
+# logfilename       [owner:group]  mode  count  size     when  flags  [/pid_file]  [sig_num]
+{{PWD}}/stderr.log                 640   5      10000    *     NJ
+{{PWD}}/stdout.log                 640   5      10000    *     NJ
