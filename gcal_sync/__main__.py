@@ -123,14 +123,14 @@ def get_service(creds: Credentials):
     return ret
 
 
-def list_events(creds: Credentials, start_time: datetime, days: int, calendar_id: str) -> list[dict[str, Any]]:
+def list_events(creds: Credentials, start_time: datetime, days: int, calendar: Calendar) -> list[dict[str, Any]]:
     service = get_service(creds)
 
     time_min = start_time
     time_max = time_min + timedelta(days=days)
 
     events_result = service.events().list(
-        calendarId=calendar_id,
+        calendarId=calendar.id,
         timeMin=time_min.isoformat(),
         timeMax=time_max.isoformat(),
         maxResults=days * 10,
@@ -142,34 +142,33 @@ def list_events(creds: Credentials, start_time: datetime, days: int, calendar_id
     return events
 
 
-def http_callback(action: str, id2event: dict[str, dict[str, Any]]):
+def http_callback(action: str, id2event: dict[str, dict[str, Any]], calendar: Calendar):
     def callback(id, _, ex):
         event = id2event[id]
-        msg = f"""{action} id={event["id"]} summary={event["summary"]} start={event["start"]}"""
+        msg = f"""{calendar.name}: {action} id={event["id"]} summary={event["summary"]} start={event["start"]}"""
         if ex is not None:
-            LOGGER.warning("exception=%s %s", ex, msg)
+            LOGGER.warning("exception=%s msg=%s", ex, msg)
         else:
             LOGGER.info(msg)
     return callback
 
 
-def delete_events(creds: Credentials, start_time: datetime, days: int, calendar_id: str):
+def delete_events(creds: Credentials, start_time: datetime, days: int, calendar: Calendar):
     service = get_service(creds)
     id2event = {}
 
     batch = service.new_batch_http_request(
-        callback=http_callback("delete", id2event))
-    events = list_events(creds, start_time, days, calendar_id)
+        callback=http_callback("delete", id2event, calendar))
+    events = list_events(creds, start_time, days, calendar)
     for i, e in enumerate(events):
         info = f"id={e['id']} summary={e['summary']} start={e['start']}"
         if not ("description" in e and MARK in e["description"]):
-            LOGGER.info("not deleted %s", info)
+            LOGGER.info("%s: not deleted %s", calendar.name, info)
             continue
-        LOGGER.info("""deleting %s""", info)
         req_id = str(i+1)
         batch.add(
             service.events().delete(
-                calendarId=calendar_id,
+                calendarId=calendar.id,
                 eventId=e["id"]
             ),
             request_id=req_id
@@ -178,17 +177,17 @@ def delete_events(creds: Credentials, start_time: datetime, days: int, calendar_
     batch.execute()
 
 
-def create_events(creds: Credentials, events: list[dict[str, Any]], calendar_id: str, mask: bool):
+def create_events(creds: Credentials, events: list[dict[str, Any]], calendar: Calendar, mask: bool):
     service = get_service(creds)
     id2event = {}
     update_time = str(datetime.now())
 
     batch = service.new_batch_http_request(
-        callback=http_callback("create", id2event))
+        callback=http_callback("create", id2event, calendar))
     for i, e in enumerate(events):
         name = e["GCAL_SYNC_CALNAME"]
         batch.add(service.events().insert(
-            calendarId=calendar_id,
+            calendarId=calendar.id,
             body={
                 "summary": name + ":" + (e["summary"] if not mask else "BLOCK"),
                 "start": e["start"],
@@ -245,8 +244,8 @@ def run(cred_dir: str,
         events = []
         for cal in cals:
             creds = get_credentials(cred_dir, cal.name)
-            delete_events(creds, start_time, duration, cal.id)
-            events2 = list_events(creds, start_time, duration, cal.id)
+            delete_events(creds, start_time, duration, cal)
+            events2 = list_events(creds, start_time, duration, cal)
             for e in events2:
                 e["GCAL_SYNC_CALNAME"] = cal.name
             events += events2
@@ -256,7 +255,7 @@ def run(cred_dir: str,
                 e for e in events if not e["GCAL_SYNC_CALNAME"] == cal.name
             ]
             mask = cal.name != "ME"
-            create_events(creds, events2, cal.id, mask)
+            create_events(creds, events2, cal, mask)
     except Exception as e:
         sio = io.StringIO()
         traceback.print_exception(e, file=sio)
