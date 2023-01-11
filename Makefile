@@ -6,6 +6,7 @@ JDSC_CAL_ID := primary
 # ME_CAL_ID := 3427b56b797a40bfe4a664440ac4116972f521d8b436fcc8c6776a2619f55e40@group.calendar.google.com
 ME_CAL_ID := primary
 ATTTA_CAL_ID := primary
+INCTORE_CAL_ID := primary
 
 
 DURATION := 30
@@ -18,7 +19,8 @@ all:
 		$(CRED_DIR) \
 JDSC:$(JDSC_CAL_ID),\
 ME:$(ME_CAL_ID),\
-ATTTA:$(ATTTA_CAL_ID)
+ATTTA:$(ATTTA_CAL_ID),\
+INCTORE:$(INCTORE_CAL_ID)
 
 
 .PHONY: credentials
@@ -26,7 +28,7 @@ credentials:
 	python -m gcal_sync $(CRED_DIR) \
 		$(CRED_DIR)/gcal-sync-001.json \
 		$(CRED_DIR) \
-		JDSC,ME,ATTTA
+		JDSC,ME,ATTTA,INCTORE
 
 
 .PHONY: clean
