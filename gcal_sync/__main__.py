@@ -177,10 +177,43 @@ def delete_events(creds: Credentials, start_time: datetime, days: int, calendar:
     batch.execute()
 
 
+def make_event(event: dict[str, Any], name: str, mask: bool) -> dict[str, Any]:
+    update_time = str(datetime.now())
+    summary = name + ":" + (event["summary"] if not mask else "BLOCK")
+    if mask:
+        return {
+            "summary": summary,
+            "start": event["start"],
+            "end": event["end"],
+            "description": "\n".join([
+                f"link: {event['htmlLink']}",
+                f"id: {event['id']}",
+                f"update: {update_time}",
+                MARK
+            ])
+        }
+    else:
+        copied_keys = [
+            "conferenceData",
+            "start",
+            "end",
+            "hangoutLink",
+            "htmlLink",
+            "organizer"
+        ]
+        ret = {
+            k: event[k] for k in copied_keys if k in event
+        }
+        desc = event.get("description") or ""
+        desc += "\n" + MARK
+        ret["summary"] = summary
+        ret["description"] = desc
+        return ret
+
+
 def create_events(creds: Credentials, events: list[dict[str, Any]], calendar: Calendar, mask: bool):
     service = get_service(creds)
     id2event = {}
-    update_time = str(datetime.now())
 
     batch = service.new_batch_http_request(
         callback=http_callback("create", id2event, calendar))
@@ -188,17 +221,7 @@ def create_events(creds: Credentials, events: list[dict[str, Any]], calendar: Ca
         name = e["GCAL_SYNC_CALNAME"]
         batch.add(service.events().insert(
             calendarId=calendar.id,
-            body={
-                "summary": name + ":" + (e["summary"] if not mask else "BLOCK"),
-                "start": e["start"],
-                "end": e["end"],
-                "description": "\n".join([
-                    f"link: {e['htmlLink']}",
-                    f"id: {e['id']}",
-                    f"update: {update_time}",
-                    MARK
-                ])
-            }))
+            body=make_event(e, name, mask)))
         id2event[str(i + 1)] = e
     batch.execute()
 
