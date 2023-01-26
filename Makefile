@@ -9,7 +9,7 @@ ATTTA_CAL_ID := primary
 INCTORE_CAL_ID := primary
 
 
-DURATION := 30
+DURATION := 60
 
 
 .PHONY: all
