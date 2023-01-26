@@ -18,6 +18,7 @@ from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
+from googleapiclient.http import BatchHttpRequest
 
 LOGGER = logging.getLogger(__name__)
 MARK = "GCAL_SYNC: LKfDbxtwFlL+fQHe38DJkWbhh5lugPUI8wQaMwBAoeZUAbak"
@@ -153,7 +154,11 @@ def http_callback(action: str, id2event: dict[str, dict[str, Any]], calendar: Ca
     return callback
 
 
-def delete_events(creds: Credentials, start_time: datetime, days: int, calendar: Calendar):
+def should_deleted(e: dict[str, Any]) -> bool:
+    return "description" in e and MARK in e["description"]
+
+
+def delete_events_batch(creds: Credentials, start_time: datetime, days: int, calendar: Calendar) -> BatchHttpRequest:
     service = get_service(creds)
     id2event = {}
 
@@ -162,7 +167,7 @@ def delete_events(creds: Credentials, start_time: datetime, days: int, calendar:
     events = list_events(creds, start_time, days, calendar)
     for i, e in enumerate(events):
         info = f"id={e['id']} summary={e['summary']} start={e['start']}"
-        if not ("description" in e and MARK in e["description"]):
+        if not should_deleted(e):
             LOGGER.info("%s: not deleted %s", calendar.name, info)
             continue
         req_id = str(i+1)
@@ -174,7 +179,7 @@ def delete_events(creds: Credentials, start_time: datetime, days: int, calendar:
             request_id=req_id
         )
         id2event[req_id] = e
-    batch.execute()
+    return batch
 
 
 def make_event(event: dict[str, Any], name: str, mask: bool) -> dict[str, Any]:
@@ -265,10 +270,15 @@ def run(cred_dir: str,
 
     try:
         events = []
+        delete_batches: list[BatchHttpRequest] = []
         for cal in cals:
             creds = get_credentials(cred_dir, cal.name)
-            delete_events(creds, start_time, duration, cal)
-            events2 = list_events(creds, start_time, duration, cal)
+            delete_batches.append(delete_events_batch(
+                creds, start_time, duration, cal))
+            events2 = [
+                e for e in list_events(creds, start_time, duration, cal)
+                if not should_deleted(e)
+            ]
             for e in events2:
                 e["GCAL_SYNC_CALNAME"] = cal.name
             events += events2
@@ -279,6 +289,10 @@ def run(cred_dir: str,
             ]
             mask = cal.name != "ME"
             create_events(creds, events2, cal, mask)
+        import pdb
+        pdb.set_trace()
+        for b in delete_batches:
+            b.execute()
     except Exception as e:
         sio = io.StringIO()
         traceback.print_exception(e, file=sio)
