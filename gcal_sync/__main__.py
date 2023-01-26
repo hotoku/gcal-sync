@@ -289,8 +289,6 @@ def run(cred_dir: str,
             ]
             mask = cal.name != "ME"
             create_events(creds, events2, cal, mask)
-        import pdb
-        pdb.set_trace()
         for b in delete_batches:
             b.execute()
     except Exception as e:
