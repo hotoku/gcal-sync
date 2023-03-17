@@ -17,6 +17,15 @@ ME:$(ME_CAL_ID):google,\
 JDSC:$(JDSC_CAL_ID):google
 
 
+.PHONY: clear
+clear:
+	python -m gcal_sync clear \
+		--duration=$(DURATION) \
+		$(CRED_DIR) \
+ME:$(ME_CAL_ID):google,\
+JDSC:$(JDSC_CAL_ID):google
+
+
 .PHONY: credentials
 credentials:
 	python -m gcal_sync $(CRED_DIR) \
