@@ -10,6 +10,16 @@ class CalendarProvider(ABC):
     def list_events(self, start_time: datetime, num_days: int) -> list[Event]:
         return NotImplemented
 
+    @abstractmethod
+    def authorize(self, client_info: str, cred_dir: str, name: str):
+        """サーバーから認可を得る。
+
+        client_info: アプリケーションクライアントの認証情報
+        cred_dir: 認可情報を保存するディレクトリへのパス
+        name: 対象カレンダーの名前
+        """
+        return NotImplemented
+
 
 class Calendar(ABC):
     @abstractclassmethod
