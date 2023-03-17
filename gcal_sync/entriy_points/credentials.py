@@ -5,7 +5,7 @@ import click
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.oauth2.credentials import Credentials
 
-from ..click_types import CalendarIdList, CalendarInfo
+from ..click_types import ProviderInfoList, ProviderInfo
 
 
 def access_token_path(dir_name: str, name: str) -> str:
@@ -29,8 +29,8 @@ def make_access_token(client_token_path: str, cred_dir: str, name: str):
 
 @click.argument("client_json", type=click.Path(exists=True, dir_okay=False))
 @click.argument("cred_dir", type=click.Path(exists=True, file_okay=False, writable=True))
-@click.argument("infos", type=CalendarIdList())
-def credentials(client_json: str, cred_dir: str, infos: list[CalendarInfo]):
+@click.argument("infos", type=ProviderInfoList())
+def credentials(client_json: str, cred_dir: str, infos: list[ProviderInfo]):
     # todo:
     # 現状、googleカレンダーにしか対応していないのでプロバイダ部分は無視している。
     for info in infos:

@@ -1,31 +1,35 @@
-from typing import Any, Optional
+from typing import Any, Optional, Tuple
 from dataclasses import dataclass
 
 import click
 
+from ..calendar import CalendarProvider
+from ..calendar_util import provider_factory
+
 
 @dataclass(frozen=True)
-class CalendarInfo:
+class ProviderInfo:
     name: str
-    provider: str
+    provider: CalendarProvider
 
 
-class CalendarIdList(click.ParamType):
-    name = "CalendarIdList"
+class ProviderInfoList(click.ParamType):
+    name = "ProviderInfoList"
 
     def convert(
         self, value: Any, param: Optional[click.Parameter], ctx: Optional[click.Context]
-    ) -> list[CalendarInfo]:
+    ) -> list[ProviderInfo]:
         if isinstance(value, str):
             ss = value.split(",")
-            ret: list[CalendarInfo] = []
+            ret: list[ProviderInfo] = []
             for s in ss:
                 pair = s.split(":")
                 assert len(pair) == 2, f"panic, invalid format: {s}"
-                ret.append(CalendarInfo(pair[0], pair[1]))
+                name, prov = pair
+                ret.append(ProviderInfo(name, provider_factory(prov)))
             return ret
         if isinstance(value, list):
             return value
         if param is None and ctx is None:
             return []
-        assert False, "panic. CalendarList.convert"
+        assert False, "panic. ProviderInfoList:convert"

@@ -1,8 +1,13 @@
-from .calendar import Calendar
-from .gcp import Calendar as GoogleCalendar
+from .calendar import Calendar, CalendarProvider
+from .gcp import Calendar as GoogleCalendar, CalendarProvider as GoogleCalendarProvider
 
 
-@staticmethod
+def provider_factory(s: str) -> CalendarProvider:
+    if s == "google":
+        return GoogleCalendarProvider()
+    assert False, f"panic, unknown provider: {s}"
+
+
 def parse(s: str) -> Calendar:
     ss = s.split(":")
     assert len(ss) == 3, f"invalid format: {s}"
