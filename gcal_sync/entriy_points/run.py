@@ -19,6 +19,7 @@ def run(cred_dir: str,
         cals: list[Calendar],
         start_time: datetime, duration: int):
     cal2events = {
-        cal: cal.list_events(start_time, duration)
+        cal: cal.list_events(cred_dir, start_time, duration)
         for cal in cals
     }
+    print(cal2events)

@@ -1,8 +1,9 @@
 from typing import Any, TypeAlias
-from ..event import Event
+from ..event import Event as BaseEvent
 
-record: TypeAlias = dict[str, Any]
+Record: TypeAlias = dict[str, Any]
 
 
-class GoogleEvent(Event):
-    pass
+class Event(BaseEvent):
+    def __init__(self, rec: Record) -> None:
+        self.record = rec

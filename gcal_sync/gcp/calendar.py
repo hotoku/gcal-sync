@@ -1,13 +1,20 @@
+from __future__ import annotations
 import os
-from datetime import datetime
-from typing import Optional
+from datetime import datetime, timedelta
+from typing import Optional, Any
 
+from google.auth.transport.requests import Request
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.oauth2.credentials import Credentials
+from googleapiclient.discovery import build
 
 
-from .event import Event
-from ..calendar import Calendar as BaseCalendar, CalendarProvider as BaseCalendarProvider
+from .event import Event, Record
+from ..calendar import (
+    Calendar as BaseCalendar,
+    CalendarProvider as BaseCalendarProvider,
+    CredentialInfo as BaseCredentialInfo
+)
 
 
 def access_token_path(dir_name: str, name: str) -> str:
@@ -29,11 +36,76 @@ def make_access_token(client_token_path: str, cred_dir: str, name: str):
         token.write(creds.to_json())
 
 
+def get_service(creds: Credentials):
+    ret = build('calendar', 'v3', credentials=creds)
+    return ret
+
+
+def get_credentials(cred_dir: str, name: str) -> Credentials:
+    scopes = ['https://www.googleapis.com/auth/calendar']
+
+    token_path = access_token_path(cred_dir, name)
+    creds = None
+    if os.path.exists(token_path):
+        creds = Credentials.from_authorized_user_file(token_path, scopes)
+
+    if creds is not None and creds.valid:
+        return creds
+
+    if creds is not None and creds.expired and creds.refresh_token:
+        creds.refresh(Request())
+        with open(token_path, 'w') as token:
+            token.write(creds.to_json())
+
+    else:
+        raise RuntimeError("credential for %s is not valid" % name)
+
+    return creds
+
+
+def list_events(creds: Credentials, start_time: datetime, days: int, cal_id: str) -> list[Event]:
+    service = get_service(creds)
+
+    time_min = start_time
+    time_max = time_min + timedelta(days=days)
+
+    events_result = service.events().list(
+        calendarId=cal_id,
+        timeMin=time_min.isoformat(),
+        timeMax=time_max.isoformat(),
+        maxResults=days * 10,
+        singleEvents=True,
+        orderBy='startTime'
+    ).execute()
+    events: list[Record] = events_result.get('items', [])
+
+    return list(map(Event, events))
+
+
+class CredentialInfo(BaseCredentialInfo):
+    def __init__(self, obj: Credentials) -> None:
+        self.cred = obj
+
+
+class CalendarProvider(BaseCalendarProvider):
+    def list_events(self, cred: BaseCredentialInfo, cal: BaseCalendar, start_time: datetime, num_days: int) -> list[Event]:
+        assert isinstance(cred, CredentialInfo), \
+            f"type mismatch. expected: {CredentialInfo}, actual: {type(cred)}"
+        return list_events(cred.cred, start_time, num_days, cal.id)
+
+    def authorize(self, client_info: str, cred_dir: str, name: str):
+        make_access_token(client_info, cred_dir, name)
+
+    def get_credential(self, cred_dir: str, name: str) -> CredentialInfo:
+        cred = get_credentials(cred_dir, name)
+        return CredentialInfo(cred)
+
+
 class Calendar(BaseCalendar):
-    def __init__(self, name: str, id: Optional[str]) -> None:
-        self.name = name
-        self.id = id
-        self._provide = CalendarProvider()
+    def __init__(self, name: str, id: str) -> None:
+        self._name = name
+        self._id = id
+        self._provider = CalendarProvider()
 
     @classmethod
     def create(cls, name: str, id: str, _: str):
@@ -42,10 +114,14 @@ class Calendar(BaseCalendar):
     def __hash__(self) -> int:
         return hash((self.name, self.id))
 
+    @property
+    def name(self) -> str:
+        return self._name
 
-class CalendarProvider(BaseCalendarProvider):
-    def list_events(self, start_time: datetime, num_days: int) -> list[Event]:
-        raise NotImplementedError()
+    @property
+    def provider(self) -> CalendarProvider:
+        return self._provider
 
-    def authorize(self, client_info: str, cred_dir: str, name: str):
-        make_access_token(client_info, cred_dir, name)
+    @property
+    def id(self) -> str:
+        return self._id
