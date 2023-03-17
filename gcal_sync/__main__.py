@@ -313,5 +313,43 @@ def credentials(client_json: str, cred_dir: str, ids: list[str]):
         make_access_token(client_json, cred_dir, id_)
 
 
+@main.command()
+@click.argument("cred_dir", type=click.Path(exists=True, file_okay=False))
+@click.argument("cals", type=CalendarList())
+@click.option("--start_time", type=click.DateTime(),
+              default=datetime.now(tz=dtz.gettz("Asia/Tokyo")),
+              help="start time of synchronized interval. default to current time.")
+@click.option("--duration", type=int,
+              default=30,
+              help="duration of synchronized interval in days. default to 30.")
+def clear(cred_dir: str,
+          cals: list[Calendar],
+          start_time: datetime, duration: int):
+    setup_logger(debug=False)
+
+    try:
+        events = []
+        delete_batches: list[BatchHttpRequest] = []
+        for cal in cals:
+            creds = get_credentials(cred_dir, cal.name)
+            delete_batches.append(delete_events_batch(
+                creds, start_time, duration, cal))
+            events2 = [
+                e for e in list_events(creds, start_time, duration, cal)
+                if not should_deleted(e)
+            ]
+            for e in events2:
+                e["GCAL_SYNC_CALNAME"] = cal.name
+            events += events2
+        for b in delete_batches:
+            b.execute()
+    except Exception as e:
+        sio = io.StringIO()
+        traceback.print_exception(e, file=sio)
+        msg = sio.getvalue()
+        LOGGER.error(msg)
+        notify_error(msg, read_url(cred_dir))
+
+
 if __name__ == '__main__':
     main()
