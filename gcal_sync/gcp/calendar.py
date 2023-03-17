@@ -92,7 +92,7 @@ def list_events(creds: Credentials, start_time: datetime, days: int, cal_id: str
 def http_callback(action: str, id2event: dict[str, dict[str, Any]], calendar: Calendar):
     def callback(id, _, ex):
         event = id2event[id]
-        msg = f"""{calendar.name}: {action} id={event["id"]} summary={event["summary"]} start={event["start"]}"""
+        msg = f'{calendar.name}: {action} id={event.get("id")} summary={event["summary"]} start={event["start"]}'
         if ex is not None:
             LOGGER.warning("exception=%s msg=%s", ex, msg)
         else:
@@ -161,11 +161,11 @@ class CalendarProvider(BaseCalendarProvider):
         return list_events(cred.cred, start_time, num_days, cal.id)
 
     def delete_events(self, cred: CredentialInfo, cal: Calendar, events: list[Event]):
-        batch = delete_events_batch(cred, cal, events)
+        batch = delete_events_batch(cred.cred, cal, events)
         batch.execute()
 
     def insert_events(self, cred: CredentialInfo, cal: Calendar, events: list[Event]):
-        batch = create_events_batch(cred, cal, events)
+        batch = create_events_batch(cred.cred, cal, events)
         batch.execute()
 
 
