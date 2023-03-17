@@ -20,11 +20,7 @@ from ..gcp import get_credentials, list_events
 def run(cred_dir: str,
         cals: list[Calendar],
         start_time: datetime, duration: int):
-    cal2cred = {
-        cal: get_credentials(cred_dir, cal.name)
-        for cal in cals
-    }
     cal2events = {
-        cal: list_events(cal2cred[cal], start_time, duration, cal)
+        cal: cal.list_events(start_time, duration)
         for cal in cals
     }

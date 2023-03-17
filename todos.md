@@ -1,0 +1,3 @@
+- credentialsのcalendar infoを削除。idフィールドがないcalendarを使う
+- idフィールドがoptionalになるので、idにアクセスする際にassertチェックを入れる
+- これによって、calendarクラスの中に認証に関するロジックを閉じ込められる
