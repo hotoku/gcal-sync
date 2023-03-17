@@ -2,11 +2,11 @@ from datetime import datetime
 
 import click
 import dateutil.tz as dtz
-
-from gcal_sync.utils import get_credentials
+from gcal_sync.gcp import list_events
 
 from .calendar_list import CalendarList
 from .calendar import Calendar
+from .gcp import get_credentials, list_events
 
 
 @click.argument("cred_dir", type=click.Path(exists=True, file_okay=False))
@@ -25,7 +25,6 @@ def run(cred_dir: str,
         for cal in cals
     }
     cal2events = {
-        cal: cal
+        cal: list_events(cal2cred[cal], start_time, duration, cal)
         for cal in cals
     }
-    pass

@@ -8,9 +8,7 @@ from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
 
 from ..calendar import Calendar
-
-
-Event: TypeAlias = list[dict[str, Any]]
+from ..event import Event
 
 
 def access_token_path(dir_name: str, name: str) -> str:

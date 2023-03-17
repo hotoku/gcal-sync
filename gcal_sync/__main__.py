@@ -1,7 +1,9 @@
 import click
 
-from .run import run as run_
-from .credentials import credentials as credentials_
+from .entriy_points import (
+    run as run_,
+    credentials as credentials_
+)
 
 
 @click.group()

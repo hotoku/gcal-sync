@@ -13,8 +13,8 @@ all:
 	python -m gcal_sync run \
 		--duration=$(DURATION) \
 		$(CRED_DIR) \
-ME:$(ME_CAL_ID),\
-JDSC:$(JDSC_CAL_ID)
+ME:$(ME_CAL_ID):google,\
+JDSC:$(JDSC_CAL_ID):google
 
 
 .PHONY: credentials
@@ -22,7 +22,7 @@ credentials:
 	python -m gcal_sync $(CRED_DIR) \
 		$(CRED_DIR)/gcal-sync-001.json \
 		$(CRED_DIR) \
-		JDSC,ME
+		JDSC:google,ME:google
 
 
 .PHONY: clean
