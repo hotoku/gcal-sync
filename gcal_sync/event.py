@@ -4,10 +4,6 @@ from datetime import datetime
 
 class Event(ABC):
     @abstractmethod
-    def __hash__(self) -> int:
-        return NotImplemented
-
-    @abstractmethod
     def marked(self) -> bool:
         return NotImplemented
 

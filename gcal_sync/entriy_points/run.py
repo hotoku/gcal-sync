@@ -1,4 +1,5 @@
 from datetime import datetime
+from itertools import product
 
 import click
 import dateutil.tz as dtz
@@ -36,7 +37,8 @@ def compare(src_: list[Event], dest_: list[Event], src_name: str) -> Edition:
 
     return Edition(
         [dest_id2event[e] for e in delete],
-        [src_id2event[e] for e in insert]
+        [src_id2event[e] for e in insert],
+        src_name
     )
 
 
@@ -55,4 +57,12 @@ def run(cred_dir: str,
         cal: cal.list_events(cred_dir, start_time, duration)
         for cal in cals
     }
-    print(cal2events)
+    cal2editions: dict[Calendar, list[Edition]] = {
+        cal: []
+        for cal in cals
+    }
+    for src, dest in product(cal2events.keys(), cal2events.keys()):
+        if src == dest:
+            continue
+        e = compare(cal2events[src], cal2events[dest], src.name)
+        cal2editions[dest].append(e)

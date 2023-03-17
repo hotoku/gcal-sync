@@ -2,6 +2,7 @@ from __future__ import annotations
 from abc import ABC, abstractclassmethod, abstractmethod, abstractproperty
 from datetime import datetime
 
+from .edition import Edition
 from .event import Event
 
 
@@ -20,10 +21,6 @@ class CalendarProvider(ABC):
     """
 
     @abstractmethod
-    def list_events(self, cred: CredentialInfo, cal: Calendar, start_time: datetime, num_days: int) -> list[Event]:
-        return NotImplemented
-
-    @abstractmethod
     def authorize(self, client_info: str, cred_dir: str, name: str):
         """サーバーから認可を得る。
 
@@ -35,6 +32,18 @@ class CalendarProvider(ABC):
 
     @abstractmethod
     def get_credential(self, cred_dir: str, name: str) -> CredentialInfo:
+        return NotImplemented
+
+    @abstractmethod
+    def delete_events(self, cred: CredentialInfo, cal: Calendar, events: list[Event]):
+        return NotImplemented
+
+    @abstractmethod
+    def insert_events(self, cred: CredentialInfo, cal: Calendar, events: list[Event]):
+        return NotImplemented
+
+    @abstractmethod
+    def list_events(self, cred: CredentialInfo, cal: Calendar, start_time: datetime, num_days: int) -> list[Event]:
         return NotImplemented
 
 
@@ -63,3 +72,21 @@ class Calendar(ABC):
     @abstractmethod
     def __hash__(self) -> int:
         return NotImplemented
+
+    @abstractmethod
+    def create_insert_event(self, src_name: str, events: list[Event]):
+        return NotImplemented
+
+    def execute(self, cred_dir: str, editions: list[Edition]):
+        cred = self.provider.get_credential(cred_dir, self.name)
+
+        delete = []
+        for e in editions:
+            delete += e.delete
+
+        self.provider.delete_events(cred, self, delete)
+
+        insert = []
+        for e in editions:
+            insert += self.create_insert_event(e.src_name, e.create)
+        self.provider.insert_events(cred, self, insert)

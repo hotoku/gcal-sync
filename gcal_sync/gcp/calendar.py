@@ -2,11 +2,13 @@ from __future__ import annotations
 import os
 from datetime import datetime, timedelta
 from typing import Optional, Any
+import logging
 
 from google.auth.transport.requests import Request
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
+from googleapiclient.http import BatchHttpRequest
 
 
 from .event import Event, Record
@@ -15,6 +17,9 @@ from ..calendar import (
     CalendarProvider as BaseCalendarProvider,
     CredentialInfo as BaseCredentialInfo
 )
+from gcal_sync import calendar
+
+LOGGER = logging.getLogger(__name__)
 
 
 def access_token_path(dir_name: str, name: str) -> str:
@@ -82,23 +87,62 @@ def list_events(creds: Credentials, start_time: datetime, days: int, cal_id: str
     return list(map(Event, events))
 
 
+def http_callback(action: str, id2event: dict[str, dict[str, Any]], calendar: Calendar):
+    def callback(id, _, ex):
+        event = id2event[id]
+        msg = f"""{calendar.name}: {action} id={event["id"]} summary={event["summary"]} start={event["start"]}"""
+        if ex is not None:
+            LOGGER.warning("exception=%s msg=%s", ex, msg)
+        else:
+            LOGGER.info(msg)
+    return callback
+
+
+def delete_events_batch(creds: Credentials, calendar: Calendar, events: list[Event]) -> BatchHttpRequest:
+    service = get_service(creds)
+    id2event = {}
+
+    batch = service.new_batch_http_request(
+        callback=http_callback("delete", id2event, calendar))
+
+    for i, e in enumerate(events):
+        rec = e.record
+        req_id = str(i+1)
+        batch.add(
+            service.events().delete(
+                calendarId=calendar.id,
+                eventId=rec["id"]
+            ),
+            request_id=req_id
+        )
+        id2event[req_id] = rec
+    return batch
+
+
 class CredentialInfo(BaseCredentialInfo):
     def __init__(self, obj: Credentials) -> None:
         self.cred = obj
 
 
 class CalendarProvider(BaseCalendarProvider):
-    def list_events(self, cred: BaseCredentialInfo, cal: BaseCalendar, start_time: datetime, num_days: int) -> list[Event]:
-        assert isinstance(cred, CredentialInfo), \
-            f"type mismatch. expected: {CredentialInfo}, actual: {type(cred)}"
-        return list_events(cred.cred, start_time, num_days, cal.id)
-
     def authorize(self, client_info: str, cred_dir: str, name: str):
         make_access_token(client_info, cred_dir, name)
 
     def get_credential(self, cred_dir: str, name: str) -> CredentialInfo:
         cred = get_credentials(cred_dir, name)
         return CredentialInfo(cred)
+
+    def list_events(self, cred: BaseCredentialInfo, cal: BaseCalendar, start_time: datetime, num_days: int) -> list[Event]:
+        assert isinstance(cred, CredentialInfo), \
+            f"type mismatch. expected: {CredentialInfo}, actual: {type(cred)}"
+        return list_events(cred.cred, start_time, num_days, cal.id)
+
+    def delete_events(self, cred: CredentialInfo, cal: Calendar, events: list[Event]):
+        batch = delete_events_batch(cred, cal, events)
+        pass
+
+    def insert_events(self, cred: CredentialInfo, cal: Calendar, events: list[Event]):
+        pass
 
 
 class Calendar(BaseCalendar):
@@ -125,3 +169,9 @@ class Calendar(BaseCalendar):
     @property
     def id(self) -> str:
         return self._id
+
+    def __str__(self) -> str:
+        return self.name
+
+    def __repr__(self) -> str:
+        return f"Calendar({self.name, self.id})"

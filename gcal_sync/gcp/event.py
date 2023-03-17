@@ -33,3 +33,6 @@ class Event(BaseEvent):
     def src_name(self) -> str:
         summary = self.record["summary"]
         return summary.split(":")[0]
+
+    def __repr__(self) -> str:
+        return f"Event({self.record})"
