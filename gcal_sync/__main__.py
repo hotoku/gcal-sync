@@ -11,6 +11,7 @@ from .entriy_points import (
 
 LOGGER = logging.getLogger(__name__)
 
+
 def setup_logger(debug: bool = False):
     fmt = "%(asctime)s - %(name)s - %(levelname)s - %(message)s - (pid: %(process)d) - %(threadName)s"
     fmter = logging.Formatter(fmt)
@@ -25,13 +26,10 @@ def setup_logger(debug: bool = False):
     g = logging.getLogger("googleapiclient.discovery_cache")
     g.setLevel(logging.WARNING)
 
+
 @click.group()
 def main():
     setup_logger()
-    LOGGER.info("debug")
-    LOGGER.info("info")
-    LOGGER.warn("warn")
-    
 
 
 run = main.command(run_)
