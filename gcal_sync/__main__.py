@@ -17,12 +17,21 @@ def setup_logger(debug: bool = False):
     handler = logging.StreamHandler(sys.stderr)
     handler.setFormatter(fmter)
     level = logging.DEBUG if debug else logging.INFO
-    LOGGER.setLevel(level)
-    LOGGER.addHandler(handler)
+    handler.setLevel(level)
+    root = logging.getLogger()
+    root.setLevel(level)
+    root.addHandler(handler)
+
+    g = logging.getLogger("googleapiclient.discovery_cache")
+    g.setLevel(logging.WARNING)
 
 @click.group()
 def main():
     setup_logger()
+    LOGGER.info("debug")
+    LOGGER.info("info")
+    LOGGER.warn("warn")
+    
 
 
 run = main.command(run_)

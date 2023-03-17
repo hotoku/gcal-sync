@@ -1,10 +1,13 @@
 from __future__ import annotations
 from abc import ABC, abstractclassmethod, abstractmethod, abstractproperty
 from datetime import datetime
+import logging
 
 from .edition import Edition
 from .event import Event
 
+
+LOGGER = logging.getLogger(__name__)
 
 class CredentialInfo:
     pass
@@ -83,7 +86,8 @@ class Calendar(ABC):
         delete = []
         for e in editions:
             delete += e.delete
-
+        
+        LOGGER.info("deleting: %s", delete)
         self.provider.delete_events(cred, self, delete)
 
         insert = []
