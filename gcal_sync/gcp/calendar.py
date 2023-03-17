@@ -1,8 +1,10 @@
 from __future__ import annotations
 import os
 from datetime import datetime, timedelta
-from typing import Optional, Any
+from typing import Any
 import logging
+from gcal_sync.gcp.event_util import dump_description
+
 
 from google.auth.transport.requests import Request
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -17,7 +19,7 @@ from ..calendar import (
     CalendarProvider as BaseCalendarProvider,
     CredentialInfo as BaseCredentialInfo
 )
-from gcal_sync import calendar
+from gcal_sync import NONCE, calendar
 
 LOGGER = logging.getLogger(__name__)
 
@@ -119,6 +121,27 @@ def delete_events_batch(creds: Credentials, calendar: Calendar, events: list[Eve
     return batch
 
 
+def create_events_batch(creds: Credentials, calendar: Calendar, events: list[Event]) -> BatchHttpRequest:
+    service = get_service(creds)
+    id2event = {}
+
+    batch = service.new_batch_http_request(
+        callback=http_callback("create", id2event, calendar))
+
+    for i, e in enumerate(events):
+        rec = e.record
+        req_id = str(i+1)
+        batch.add(
+            service.events().insert(
+                calendarId=calendar.id,
+                body=e.record
+            ),
+            request_id=req_id
+        )
+        id2event[req_id] = rec
+    return batch
+
+
 class CredentialInfo(BaseCredentialInfo):
     def __init__(self, obj: Credentials) -> None:
         self.cred = obj
@@ -139,10 +162,11 @@ class CalendarProvider(BaseCalendarProvider):
 
     def delete_events(self, cred: CredentialInfo, cal: Calendar, events: list[Event]):
         batch = delete_events_batch(cred, cal, events)
-        pass
+        batch.execute()
 
     def insert_events(self, cred: CredentialInfo, cal: Calendar, events: list[Event]):
-        pass
+        batch = create_events_batch(cred, cal, events)
+        batch.execute()
 
 
 class Calendar(BaseCalendar):
@@ -175,3 +199,17 @@ class Calendar(BaseCalendar):
 
     def __repr__(self) -> str:
         return f"Calendar({self.name, self.id})"
+
+    def convert_insert_event(self, src_name: str, event: Event) -> Event:
+        rec = {
+            "summary": f"{src_name}:BLOCK",
+            "start": event.record["start"],
+            "end": event.record["end"],
+            "description": dump_description({
+                "link": str(event.record.get('htmlLink')),
+                "id": event.record['id'],
+                "update": str(datetime.now()),
+                "MARK": NONCE
+            })
+        }
+        return Event(rec)

@@ -74,7 +74,7 @@ class Calendar(ABC):
         return NotImplemented
 
     @abstractmethod
-    def create_insert_event(self, src_name: str, events: list[Event]):
+    def convert_insert_event(self, src_name: str, event: Event) -> Event:
         return NotImplemented
 
     def execute(self, cred_dir: str, editions: list[Edition]):
@@ -87,6 +87,11 @@ class Calendar(ABC):
         self.provider.delete_events(cred, self, delete)
 
         insert = []
-        for e in editions:
-            insert += self.create_insert_event(e.src_name, e.create)
+        for edit in editions:
+            for e in edit.create:
+                insert.append(
+                    self.convert_insert_event(
+                        edit.src_name, e
+                    )
+                )
         self.provider.insert_events(cred, self, insert)

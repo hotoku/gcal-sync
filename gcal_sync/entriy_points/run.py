@@ -66,3 +66,5 @@ def run(cred_dir: str,
             continue
         e = compare(cal2events[src], cal2events[dest], src.name)
         cal2editions[dest].append(e)
+    for cal, es in cal2editions.items():
+        cal.execute(cred_dir, es)
