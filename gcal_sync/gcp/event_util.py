@@ -4,7 +4,7 @@ SEP = ":"
 
 def parse_description(s: str) -> dict[str, str]:
     n = len(HEADER)
-    lines = [l[n:] for l in s.split() if l[:n] == HEADER]
+    lines = [l[n:] for l in s.split("\n") if l[:n] == HEADER]
     ret: dict[str, str] = {}
     for line in lines:
         try:
