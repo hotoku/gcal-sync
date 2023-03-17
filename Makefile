@@ -23,6 +23,17 @@ ATTTA:$(ATTTA_CAL_ID),\
 INCTORE:$(INCTORE_CAL_ID)
 
 
+.PHONY: clear
+clear:
+	python -m gcal_sync clear \
+		--duration=$(DURATION) \
+		$(CRED_DIR) \
+ME:$(ME_CAL_ID),\
+JDSC:$(JDSC_CAL_ID),\
+ATTTA:$(ATTTA_CAL_ID),\
+INCTORE:$(INCTORE_CAL_ID)
+
+
 .PHONY: credentials
 credentials:
 	python -m gcal_sync $(CRED_DIR) \
