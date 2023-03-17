@@ -1,7 +1,8 @@
 from typing import Any, Optional
 
 import click
-from .calendar import Calendar
+from ..calendar import Calendar
+from ..calendar_util import parse
 
 
 class CalendarList(click.ParamType):
@@ -12,7 +13,7 @@ class CalendarList(click.ParamType):
     ) -> list[Calendar]:
         if isinstance(value, str):
             ss = value.split(",")
-            return list(map(Calendar.parse, ss))
+            return list(map(parse, ss))
         if isinstance(value, list):
             return value
         if param is None and ctx is None:

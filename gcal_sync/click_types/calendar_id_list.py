@@ -4,7 +4,7 @@ from dataclasses import dataclass
 import click
 
 
-@dataclass
+@dataclass(frozen=True)
 class CalendarInfo:
     name: str
     provider: str

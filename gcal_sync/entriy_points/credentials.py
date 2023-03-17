@@ -5,7 +5,7 @@ import click
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.oauth2.credentials import Credentials
 
-from .calendar_id_list import CalendarIdList, CalendarInfo
+from ..click_types import CalendarIdList, CalendarInfo
 
 
 def access_token_path(dir_name: str, name: str) -> str:

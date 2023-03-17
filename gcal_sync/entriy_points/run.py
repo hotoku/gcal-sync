@@ -4,9 +4,9 @@ import click
 import dateutil.tz as dtz
 from gcal_sync.gcp import list_events
 
-from .calendar_list import CalendarList
-from .calendar import Calendar
-from .gcp import get_credentials, list_events
+from ..click_types import CalendarList
+from ..calendar import Calendar
+from ..gcp import get_credentials, list_events
 
 
 @click.argument("cred_dir", type=click.Path(exists=True, file_okay=False))
