@@ -37,7 +37,7 @@ credentials:
 	python -m gcal_sync $(CRED_DIR) \
 		$(CRED_DIR)/gcal-sync-001.json \
 		$(CRED_DIR) \
-		JDSC:google,ME:google,INCTORE:google,ATTTA:google
+		JDSC:google,ME:google,INCTORE:google,ATTTA:google,JFR:google
 
 
 .PHONY: clean
