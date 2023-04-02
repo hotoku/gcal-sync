@@ -1,10 +1,11 @@
-CRED_DIR := credentials
-
-
 JDSC_CAL_ID := primary
 ME_CAL_ID := primary
 INCTORE_CAL_ID := primary
 ATTTA_CAL_ID := primary
+JFR_CAL_ID := primary
+
+
+CRED_DIR := credentials
 
 
 DURATION := 60
@@ -18,7 +19,8 @@ all:
 ME:$(ME_CAL_ID):google,\
 JDSC:$(JDSC_CAL_ID):google,\
 INCTORE:$(INCTORE_CAL_ID):google,\
-ATTTA:$(ATTTA_CAL_ID):google
+ATTTA:$(ATTTA_CAL_ID):google,\
+JFR:$(JFR_CAL_ID):google
 
 
 .PHONY: clear
@@ -29,7 +31,8 @@ clear:
 ME:$(ME_CAL_ID):google,\
 JDSC:$(JDSC_CAL_ID):google,\
 INCTORE:$(INCTORE_CAL_ID):google,\
-ATTTA:$(ATTTA_CAL_ID):google
+ATTTA:$(ATTTA_CAL_ID):google,\
+JFR:$(JFR_CAL_ID):google
 
 
 .PHONY: credentials
