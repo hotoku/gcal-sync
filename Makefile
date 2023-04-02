@@ -8,7 +8,7 @@ JFR_CAL_ID := primary
 CRED_DIR := credentials
 
 
-DURATION := 1
+DURATION := 2
 
 
 .PHONY: all
