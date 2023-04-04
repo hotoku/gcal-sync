@@ -52,6 +52,10 @@ class CalendarProvider(ABC):
 
 
 class Calendar(ABC):
+    def __init__(self, masked: bool = False) -> None:
+        super().__init__()
+        self.masked = masked
+
     @abstractclassmethod
     def create(cls, name: str, id: str, provider: str):
         # todo: providerは、各実装が知っているはずなので引数には不要

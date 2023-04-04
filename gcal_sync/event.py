@@ -20,6 +20,14 @@ class Event(ABC):
 
     @abstractproperty
     def id(self) -> str:
+        """各カレンダーの中で、このイベントを一意に識別するためのidを返す。
+        実体は、カレンダープロバイダごとに異なると考えられる。"""
+        return NotImplemented
+
+    @abstractproperty
+    def title(self) -> str:
+        """このイベントの件名を返す。
+        実体は、カレンダープロバイダごとに異なる。"""
         return NotImplemented
 
     @abstractproperty

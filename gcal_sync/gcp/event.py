@@ -42,3 +42,7 @@ class Event(BaseEvent):
 
     def __repr__(self) -> str:
         return f"Event({self.record})"
+
+    @property
+    def title(self) -> str:
+        return self.record["summary"]

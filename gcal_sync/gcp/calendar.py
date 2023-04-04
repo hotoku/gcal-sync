@@ -170,7 +170,8 @@ class CalendarProvider(BaseCalendarProvider):
 
 
 class Calendar(BaseCalendar):
-    def __init__(self, name: str, id: str) -> None:
+    def __init__(self, name: str, id: str, masked: bool = False) -> None:
+        super().__init__(masked)
         self._name = name
         self._id = id
         self._provider = CalendarProvider()
@@ -201,8 +202,11 @@ class Calendar(BaseCalendar):
         return f"Calendar({self.name, self.id})"
 
     def convert_insert_event(self, event: Event) -> Event:
+        title = event.calendar.name + ":" + (
+            "BLOCK" if self.masked else event.title
+        )
         rec = {
-            "summary": f"{event.calendar.name}:BLOCK",
+            "summary": title,
             "start": event.record["start"],
             "end": event.record["end"],
             "description": dump_description({
