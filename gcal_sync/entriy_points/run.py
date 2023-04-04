@@ -37,8 +37,7 @@ def compare(src_: list[Event], dest_: list[Event], src_name: str) -> Edition:
 
     return Edition(
         [dest_id2event[e] for e in delete],
-        [src_id2event[e] for e in insert],
-        src_name
+        [src_id2event[e] for e in insert]
     )
 
 

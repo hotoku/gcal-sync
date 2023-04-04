@@ -2,16 +2,18 @@ from abc import abstractproperty
 from datetime import datetime
 from typing import Any, TypeAlias
 
-from gcal_sync.gcp.event_util import parse_description
-
-from .. import NONCE
 from ..event import Event as BaseEvent
+from ..calendar import Calendar
+from .. import NONCE
+
+from .event_util import parse_description
 
 Record: TypeAlias = dict[str, Any]
 
 
 class Event(BaseEvent):
-    def __init__(self, rec: Record) -> None:
+    def __init__(self, cal: Calendar, rec: Record) -> None:
+        super().__init__(cal)
         self.record = rec
 
     def marked(self) -> bool:
@@ -21,8 +23,7 @@ class Event(BaseEvent):
     def id(self) -> str:
         return self.record["id"]
 
-    @property
-    def orig_id(self) -> str:
+    def orig_id_impl(self) -> str:
         desc = self.record["description"]
         vals = parse_description(desc)
         return vals["id"]
@@ -35,8 +36,7 @@ class Event(BaseEvent):
     def end_time(self) -> datetime:
         return self.record["end"]
 
-    @property
-    def src_name(self) -> str:
+    def src_name_impl(self) -> str:
         summary = self.record["summary"]
         return summary.split(":")[0]
 

@@ -70,14 +70,14 @@ def get_credentials(cred_dir: str, name: str) -> Credentials:
     return creds
 
 
-def list_events(creds: Credentials, start_time: datetime, days: int, cal_id: str) -> list[Event]:
+def list_events(creds: Credentials, start_time: datetime, days: int, cal: BaseCalendar) -> list[Event]:
     service = get_service(creds)
 
     time_min = start_time
     time_max = time_min + timedelta(days=days)
 
     events_result = service.events().list(
-        calendarId=cal_id,
+        calendarId=cal.id,
         timeMin=time_min.isoformat(),
         timeMax=time_max.isoformat(),
         maxResults=days * 10,
@@ -86,7 +86,7 @@ def list_events(creds: Credentials, start_time: datetime, days: int, cal_id: str
     ).execute()
     events: list[Record] = events_result.get('items', [])
 
-    return list(map(Event, events))
+    return [Event(cal, rec) for rec in events]
 
 
 def http_callback(action: str, id2event: dict[str, dict[str, Any]], calendar: Calendar):
@@ -158,7 +158,7 @@ class CalendarProvider(BaseCalendarProvider):
     def list_events(self, cred: BaseCredentialInfo, cal: BaseCalendar, start_time: datetime, num_days: int) -> list[Event]:
         assert isinstance(cred, CredentialInfo), \
             f"type mismatch. expected: {CredentialInfo}, actual: {type(cred)}"
-        return list_events(cred.cred, start_time, num_days, cal.id)
+        return list_events(cred.cred, start_time, num_days, cal)
 
     def delete_events(self, cred: CredentialInfo, cal: Calendar, events: list[Event]):
         batch = delete_events_batch(cred.cred, cal, events)
@@ -200,9 +200,9 @@ class Calendar(BaseCalendar):
     def __repr__(self) -> str:
         return f"Calendar({self.name, self.id})"
 
-    def convert_insert_event(self, src_name: str, event: Event) -> Event:
+    def convert_insert_event(self, event: Event) -> Event:
         rec = {
-            "summary": f"{src_name}:BLOCK",
+            "summary": f"{event.calendar.name}:BLOCK",
             "start": event.record["start"],
             "end": event.record["end"],
             "description": dump_description({
@@ -212,4 +212,4 @@ class Calendar(BaseCalendar):
                 "MARK": NONCE
             })
         }
-        return Event(rec)
+        return Event(self, rec)

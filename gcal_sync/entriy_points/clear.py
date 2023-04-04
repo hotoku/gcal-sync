@@ -17,8 +17,8 @@ from ..calendar import Calendar
               default=30,
               help="duration of synchronized interval in days. default to 30.")
 def clear(cred_dir: str,
-        cals: list[Calendar],
-        start_time: datetime, duration: int):
+          cals: list[Calendar],
+          start_time: datetime, duration: int):
     cal2events = {
         cal: [
             e for e
@@ -28,7 +28,7 @@ def clear(cred_dir: str,
         for cal in cals
     }
     cal2edition = {
-        cal: Edition(cal2events[cal], [], "")  for cal in cals
+        cal: Edition(cal2events[cal], []) for cal in cals
     }
     for cal in cals:
         cal.execute(cred_dir, [cal2edition[cal]])

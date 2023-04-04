@@ -9,6 +9,7 @@ from .event import Event
 
 LOGGER = logging.getLogger(__name__)
 
+
 class CredentialInfo:
     pass
 
@@ -77,7 +78,7 @@ class Calendar(ABC):
         return NotImplemented
 
     @abstractmethod
-    def convert_insert_event(self, src_name: str, event: Event) -> Event:
+    def convert_insert_event(self, event: Event) -> Event:
         return NotImplemented
 
     def execute(self, cred_dir: str, editions: list[Edition]):
@@ -86,7 +87,7 @@ class Calendar(ABC):
         delete = []
         for e in editions:
             delete += e.delete
-        
+
         LOGGER.info("deleting: %s", delete)
         self.provider.delete_events(cred, self, delete)
 
@@ -94,8 +95,6 @@ class Calendar(ABC):
         for edit in editions:
             for e in edit.create:
                 insert.append(
-                    self.convert_insert_event(
-                        edit.src_name, e
-                    )
+                    self.convert_insert_event(e)
                 )
         self.provider.insert_events(cred, self, insert)

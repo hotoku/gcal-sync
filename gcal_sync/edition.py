@@ -7,4 +7,3 @@ from .event import Event
 class Edition:
     delete: list[Event]
     create: list[Event]
-    src_name: str

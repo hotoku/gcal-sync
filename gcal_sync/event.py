@@ -15,14 +15,11 @@ class Event(ABC):
 
     @abstractmethod
     def marked(self) -> bool:
+        "gcal_syncによってコピーされたイベントか否かを返す"
         return NotImplemented
 
     @abstractproperty
     def id(self) -> str:
-        return NotImplemented
-
-    @abstractproperty
-    def orig_id(self) -> str:
         return NotImplemented
 
     @abstractproperty
@@ -33,6 +30,24 @@ class Event(ABC):
     def end_time(self) -> datetime:
         return NotImplemented
 
-    @abstractproperty
+    @property
+    def orig_id(self) -> str:
+        """gcal_syncによってコピーされたイベントの場合に、その元となったイベントのidを返す。
+        そうでない場合は、AssertionErrorが発生する。"""
+        assert self.marked(), f"This event is not copied. {self}"
+        return self.orig_id_impl()
+
+    @abstractmethod
+    def orig_id_impl(self) -> str:
+        return NotImplemented
+
+    @property
     def src_name(self) -> str:
+        """gcal_syncによってコピーされたイベントの場合に、その元となったイベントが登録されていたカレンダーの名前を返す。
+        そうでない場合は、AssertionErrorが発生する。"""
+        assert self.marked(), f"This event is not copied. {self}"
+        return self.src_name_impl()
+
+    @abstractmethod
+    def src_name_impl(self) -> str:
         return NotImplemented
