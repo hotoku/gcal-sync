@@ -170,7 +170,7 @@ class CalendarProvider(BaseCalendarProvider):
 
 
 class Calendar(BaseCalendar):
-    def __init__(self, name: str, id: str, masked: bool = False) -> None:
+    def __init__(self, name: str, id: str, masked: bool = True) -> None:
         super().__init__(masked)
         self._name = name
         self._id = id
