@@ -31,6 +31,11 @@ class Event(ABC):
         return NotImplemented
 
     @abstractproperty
+    def description(self) -> str:
+        """このイベントの説明文章を返す。"""
+        return NotImplemented
+
+    @abstractproperty
     def start_time(self) -> datetime:
         return NotImplemented
 
