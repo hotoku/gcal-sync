@@ -201,19 +201,28 @@ class Calendar(BaseCalendar):
     def __repr__(self) -> str:
         return f"Calendar({self.name, self.id})"
 
+    # todo: この引数と返り値のEventはBaseEventであるべき。
+    # なぜかpyrightでも警告が出ないので原因を調査する。
     def convert_insert_event(self, event: Event) -> Event:
+        assert \
+            isinstance(event, Event), \
+            "event is not instance of gcp.event.Event"
         title = event.calendar.name + ":" + (
             "BLOCK" if self.masked else event.title
         )
+        desc = None if self.masked else event.description
         rec = {
             "summary": title,
             "start": event.record["start"],
             "end": event.record["end"],
-            "description": dump_description({
-                "link": str(event.record.get('htmlLink')),
-                "id": event.record['id'],
-                "update": str(datetime.now()),
-                "MARK": NONCE
-            })
+            "description": dump_description(
+                {
+                    "link": str(event.record.get('htmlLink')),
+                    "id": event.record['id'],
+                    "update": str(datetime.now()),
+                    "MARK": NONCE
+                },
+                desc
+            )
         }
         return Event(self, rec)

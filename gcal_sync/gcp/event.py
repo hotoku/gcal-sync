@@ -46,3 +46,10 @@ class Event(BaseEvent):
     @property
     def title(self) -> str:
         return self.record["summary"]
+
+    @property
+    def description(self) -> str:
+        if "description" in self.record:
+            return self.record["description"]
+        else:
+            return ""
