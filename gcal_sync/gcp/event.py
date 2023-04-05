@@ -1,4 +1,3 @@
-from abc import abstractproperty
 from datetime import datetime
 from typing import Any, TypeAlias
 
