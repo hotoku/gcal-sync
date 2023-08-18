@@ -18,9 +18,7 @@ all:
 		$(CRED_DIR) \
 ME:$(ME_CAL_ID):google,\
 JDSC:$(JDSC_CAL_ID):google,\
-INCTORE:$(INCTORE_CAL_ID):google,\
-ATTTA:$(ATTTA_CAL_ID):google,\
-JFR:$(JFR_CAL_ID):google
+INCTORE:$(INCTORE_CAL_ID):google
 
 
 .PHONY: clear
@@ -30,9 +28,7 @@ clear:
 		$(CRED_DIR) \
 ME:$(ME_CAL_ID):google,\
 JDSC:$(JDSC_CAL_ID):google,\
-INCTORE:$(INCTORE_CAL_ID):google,\
-ATTTA:$(ATTTA_CAL_ID):google,\
-JFR:$(JFR_CAL_ID):google
+INCTORE:$(INCTORE_CAL_ID):google
 
 
 .PHONY: credentials
@@ -40,7 +36,7 @@ credentials:
 	python -m gcal_sync $@ \
 		$(CRED_DIR)/gcal-sync-001.json \
 		$(CRED_DIR) \
-		JDSC:google,ME:google,INCTORE:google,ATTTA:google,JFR:google
+		JDSC:google,ME:google,INCTORE:google
 
 
 .PHONY: clean
