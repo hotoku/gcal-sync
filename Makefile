@@ -37,7 +37,7 @@ JFR:$(JFR_CAL_ID):google
 
 .PHONY: credentials
 credentials:
-	python -m gcal_sync $(CRED_DIR) \
+	python -m gcal_sync $@ \
 		$(CRED_DIR)/gcal-sync-001.json \
 		$(CRED_DIR) \
 		JDSC:google,ME:google,INCTORE:google,ATTTA:google,JFR:google
