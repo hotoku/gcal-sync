@@ -1,8 +1,6 @@
 JDSC_CAL_ID := primary
 ME_CAL_ID := primary
 INCTORE_CAL_ID := primary
-ATTTA_CAL_ID := primary
-JFR_CAL_ID := primary
 
 
 CRED_DIR := credentials
