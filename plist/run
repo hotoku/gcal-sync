@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/bin/zsh -l
 
 
 START_TIME=$(date +"[%Y-%m-%d %H:%M:%S] copy start")
