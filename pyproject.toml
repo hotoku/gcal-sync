@@ -13,6 +13,7 @@ google-api-python-client = "^2.68.0"
 google-auth-httplib2 = "^0.1.0"
 google-auth-oauthlib = "^0.7.1"
 python-dateutil = "^2.8.2"
+jinja2-cli = "^0.8.2"
 
 
 [tool.poetry.dev-dependencies]
