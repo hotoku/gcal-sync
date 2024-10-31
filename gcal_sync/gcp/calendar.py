@@ -1,25 +1,23 @@
 from __future__ import annotations
+
+import logging
 import os
 from datetime import datetime, timedelta
 from typing import Any
-import logging
-from gcal_sync.gcp.event_util import dump_description
-
 
 from google.auth.transport.requests import Request
-from google_auth_oauthlib.flow import InstalledAppFlow
 from google.oauth2.credentials import Credentials
+from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.http import BatchHttpRequest
 
-
-from .event import Event, Record
-from ..calendar import (
-    Calendar as BaseCalendar,
-    CalendarProvider as BaseCalendarProvider,
-    CredentialInfo as BaseCredentialInfo
-)
 from gcal_sync import NONCE, calendar
+from gcal_sync.gcp.event_util import dump_description
+
+from ..calendar import Calendar as BaseCalendar
+from ..calendar import CalendarProvider as BaseCalendarProvider
+from ..calendar import CredentialInfo as BaseCredentialInfo
+from .event import Event, Record
 
 LOGGER = logging.getLogger(__name__)
 
