@@ -1,11 +1,11 @@
 from __future__ import annotations
+
+import logging
 from abc import ABC, abstractclassmethod, abstractmethod, abstractproperty
 from datetime import datetime
-import logging
 
 from .edition import Edition
 from .event import Event
-
 
 LOGGER = logging.getLogger(__name__)
 
@@ -56,20 +56,25 @@ class Calendar(ABC):
         super().__init__()
         self.masked = masked
 
-    @abstractclassmethod
+    @classmethod
+    @abstractmethod    
     def create(cls, name: str, id: str, provider: str):
         # todo: providerは、各実装が知っているはずなので引数には不要
         return NotImplemented
 
-    @abstractproperty
+    
+    @property
+    @abstractmethod
     def provider(self) -> CalendarProvider:
         return NotImplemented
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def name(self) -> str:
         return NotImplemented
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def id(self) -> str:
         return NotImplemented
 
