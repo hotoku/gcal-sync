@@ -17,6 +17,7 @@ from gcal_sync.gcp.event_util import dump_description
 from ..calendar import Calendar as BaseCalendar
 from ..calendar import CalendarProvider as BaseCalendarProvider
 from ..calendar import CredentialInfo as BaseCredentialInfo
+from ..event import Event as BaseEvent
 from .event import Event, Record
 
 LOGGER = logging.getLogger(__name__)
@@ -199,9 +200,7 @@ class Calendar(BaseCalendar):
     def __repr__(self) -> str:
         return f"Calendar({self.name, self.id})"
 
-    # todo: この引数と返り値のEventはBaseEventであるべき。
-    # なぜかpyrightでも警告が出ないので原因を調査する。
-    def convert_insert_event(self, event: Event) -> Event:
+    def convert_insert_event(self, event: BaseEvent) -> Event:
         assert \
             isinstance(event, Event), \
             "event is not instance of gcp.event.Event"
