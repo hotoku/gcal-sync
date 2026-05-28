@@ -2,6 +2,7 @@
 # INCTORE_CAL_ID := c_83968eb2553fe7c812e95f2ab335b496965c76a984471d7ce72008e33199551d@group.calendar.google.com
 ME_CAL_ID := primary
 INCTORE_CAL_ID := primary
+CAT_CAL_ID := primary
 
 
 CRED_DIR := credentials
@@ -16,7 +17,8 @@ all:
 		--duration=$(DURATION) \
 		$(CRED_DIR) \
 ME:$(ME_CAL_ID):google,\
-INCTORE:$(INCTORE_CAL_ID):google
+INCTORE:$(INCTORE_CAL_ID):google,\
+CAT:$(CAT_CAL_ID):google
 
 
 .PHONY: clear
@@ -25,7 +27,8 @@ clear:
 		--duration=$(DURATION) \
 		$(CRED_DIR) \
 ME:$(ME_CAL_ID):google,\
-INCTORE:$(INCTORE_CAL_ID):google
+INCTORE:$(INCTORE_CAL_ID):google,\
+CAT:$(CAT_CAL_ID):google
 
 
 .PHONY: credentials
@@ -33,7 +36,7 @@ credentials:
 	python -m gcal_sync $@ \
 		$(CRED_DIR)/gcal-sync-001.json \
 		$(CRED_DIR) \
-		ME:google,INCTORE:google
+		ME:google,INCTORE:google,CAT:google
 
 
 .PHONY: clean
