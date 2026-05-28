@@ -1,0 +1,2 @@
+logrotate state -- version 2
+"/home/hotoku/projects/hotoku/gcal-sync/cron.log" 2026-5-28-16:0:0
