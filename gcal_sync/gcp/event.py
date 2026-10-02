@@ -1,13 +1,29 @@
-from datetime import datetime
+from datetime import date, datetime
 from typing import Any, TypeAlias
+
+from dateutil.parser import isoparse
 
 from ..event import Event as BaseEvent
 from ..calendar import Calendar
 from .. import NONCE
 
-from .event_util import parse_description
+from ..event_util import parse_description
 
 Record: TypeAlias = dict[str, Any]
+
+
+def parse_time(t: dict[str, str]) -> date | datetime:
+    """APIのstart/endフィールドを、date(終日)またはdatetimeに変換する。"""
+    if "dateTime" in t:
+        return isoparse(t["dateTime"])
+    return date.fromisoformat(t["date"])
+
+
+def format_time(t: date | datetime) -> dict[str, str]:
+    """parse_timeの逆変換。"""
+    if isinstance(t, datetime):
+        return {"dateTime": t.isoformat()}
+    return {"date": t.isoformat()}
 
 
 class Event(BaseEvent):
@@ -28,12 +44,16 @@ class Event(BaseEvent):
         return vals["id"]
 
     @property
-    def start_time(self) -> datetime:
-        return self.record["start"]
+    def start_time(self) -> date | datetime:
+        return parse_time(self.record["start"])
 
     @property
-    def end_time(self) -> datetime:
-        return self.record["end"]
+    def end_time(self) -> date | datetime:
+        return parse_time(self.record["end"])
+
+    @property
+    def link(self) -> str | None:
+        return self.record.get("htmlLink")
 
     def src_name_impl(self) -> str:
         summary = self.record["summary"]

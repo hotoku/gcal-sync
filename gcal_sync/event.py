@@ -1,6 +1,6 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod, abstractproperty
-from datetime import datetime
+from datetime import date, datetime
 
 from typing import TYPE_CHECKING
 
@@ -36,12 +36,24 @@ class Event(ABC):
         return NotImplemented
 
     @abstractproperty
-    def start_time(self) -> datetime:
+    def start_time(self) -> date | datetime:
+        """このイベントの開始時刻を返す。
+        終日イベントの場合はdate、そうでない場合はタイムゾーン付きのdatetimeを返す。"""
         return NotImplemented
 
     @abstractproperty
-    def end_time(self) -> datetime:
+    def end_time(self) -> date | datetime:
+        """このイベントの終了時刻を返す。形式はstart_timeと同様。"""
         return NotImplemented
+
+    @property
+    def all_day(self) -> bool:
+        return not isinstance(self.start_time, datetime)
+
+    @property
+    def link(self) -> str | None:
+        """このイベントを閲覧するためのURLを返す。無い場合はNone。"""
+        return None
 
     @property
     def orig_id(self) -> str:

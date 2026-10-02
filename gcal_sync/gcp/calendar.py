@@ -11,14 +11,11 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.http import BatchHttpRequest
 
-from gcal_sync import NONCE, calendar
-from gcal_sync.gcp.event_util import dump_description
-
 from ..calendar import Calendar as BaseCalendar
 from ..calendar import CalendarProvider as BaseCalendarProvider
 from ..calendar import CredentialInfo as BaseCredentialInfo
 from ..event import Event as BaseEvent
-from .event import Event, Record
+from .event import Event, Record, format_time
 
 LOGGER = logging.getLogger(__name__)
 
@@ -201,25 +198,10 @@ class Calendar(BaseCalendar):
         return f"Calendar({self.name, self.id})"
 
     def convert_insert_event(self, event: BaseEvent) -> Event:
-        assert \
-            isinstance(event, Event), \
-            "event is not instance of gcp.event.Event"
-        title = event.calendar.name + ":" + (
-            "BLOCK" if self.masked else event.title
-        )
-        desc = None if self.masked else event.description
         rec = {
-            "summary": title,
-            "start": event.record["start"],
-            "end": event.record["end"],
-            "description": dump_description(
-                {
-                    "link": str(event.record.get('htmlLink')),
-                    "id": event.record['id'],
-                    "update": str(datetime.now()),
-                    "MARK": NONCE
-                },
-                desc
-            )
+            "summary": self.insert_title(event),
+            "start": format_time(event.start_time),
+            "end": format_time(event.end_time),
+            "description": self.insert_description(event),
         }
         return Event(self, rec)

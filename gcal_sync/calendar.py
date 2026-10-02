@@ -4,8 +4,10 @@ import logging
 from abc import ABC, abstractclassmethod, abstractmethod, abstractproperty
 from datetime import datetime
 
+from . import NONCE
 from .edition import Edition
 from .event import Event
+from .event_util import dump_description
 
 LOGGER = logging.getLogger(__name__)
 
@@ -88,7 +90,27 @@ class Calendar(ABC):
 
     @abstractmethod
     def convert_insert_event(self, event: Event) -> Event:
+        """他のカレンダーのイベントを、このカレンダーに登録するイベントに変換する。
+        eventは任意のプロバイダのイベントであり得るので、基底クラスのプロパティのみを使うこと。"""
         return NotImplemented
+
+    def insert_title(self, event: Event) -> str:
+        # todo: run.compareが件名からカレンダー名を除去するロジックと密結合している
+        return event.calendar.name + ":" + (
+            "BLOCK" if self.masked else event.title
+        )
+
+    def insert_description(self, event: Event) -> str:
+        desc = None if self.masked else event.description
+        return dump_description(
+            {
+                "link": str(event.link),
+                "id": event.id,
+                "update": str(datetime.now()),
+                "MARK": NONCE
+            },
+            desc
+        )
 
     def execute(self, cred_dir: str, editions: list[Edition]):
         cred = self.provider.get_credential(cred_dir, self.name)
