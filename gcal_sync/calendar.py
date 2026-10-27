@@ -95,7 +95,9 @@ class Calendar(ABC):
         return NotImplemented
 
     def insert_title(self, event: Event) -> str:
-        # todo: run.compareが件名からカレンダー名を除去するロジックと密結合している
+        # MEの「AD: BLOCKED」は、同期先にも件名を出す
+        if event.calendar.name == "ME" and event.title == "AD: BLOCKED":
+            return "ME: AD"
         return event.calendar.name + ":" + (
             "BLOCK" if self.masked else event.title
         )

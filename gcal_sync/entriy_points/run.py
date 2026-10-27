@@ -10,7 +10,7 @@ from ..click_types import CalendarList
 from ..calendar import Calendar
 
 
-def compare(src_: list[Event], dest_: list[Event], src_name: str, show_title: bool) -> Edition:
+def compare(src_: list[Event], dest_: list[Event], src_name: str, dest_cal: Calendar) -> Edition:
     src = [e for e in src_ if not e.marked()]
     dest = [e for e in dest_ if e.marked() and e.src_name == src_name]
     src_id2event = {
@@ -36,12 +36,9 @@ def compare(src_: list[Event], dest_: list[Event], src_name: str, show_title: bo
             delete.add(e)
             insert.add(e)
             continue
-        if show_title:
-            # todo: 同期時に件名にカレンダー名を入れるロジックと密結合しているので要修正
-            d_title = ":".join(d.title.split(":")[1:])
-            if s.title != d_title:
-                delete.add(e)
-                insert.add(e)
+        if d.title != dest_cal.insert_title(s):
+            delete.add(e)
+            insert.add(e)
 
     return Edition(
         [dest_id2event[e] for e in delete],
@@ -72,7 +69,7 @@ def run(cred_dir: str,
         if src == dest:
             continue
         e = compare(cal2events[src], cal2events[dest],
-                    src.name, not dest.masked)
+                    src.name, dest)
         cal2editions[dest].append(e)
     for cal, es in cal2editions.items():
         cal.execute(cred_dir, es)
