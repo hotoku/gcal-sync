@@ -55,10 +55,6 @@ class Event(BaseEvent):
     def link(self) -> str | None:
         return self.record.get("htmlLink")
 
-    def src_name_impl(self) -> str:
-        summary = self.record["summary"]
-        return summary.split(":")[0]
-
     def __repr__(self) -> str:
         return f"Event({self.record})"
 

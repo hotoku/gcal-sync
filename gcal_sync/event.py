@@ -4,6 +4,8 @@ from datetime import date, datetime
 
 from typing import TYPE_CHECKING
 
+from .event_util import parse_description
+
 if TYPE_CHECKING:
     from .calendar import Calendar
 
@@ -71,8 +73,4 @@ class Event(ABC):
         """gcal_syncによってコピーされたイベントの場合に、その元となったイベントが登録されていたカレンダーの名前を返す。
         そうでない場合は、AssertionErrorが発生する。"""
         assert self.marked(), f"This event is not copied. {self}"
-        return self.src_name_impl()
-
-    @abstractmethod
-    def src_name_impl(self) -> str:
-        return NotImplemented
+        return parse_description(self.description)["src"]

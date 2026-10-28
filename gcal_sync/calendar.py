@@ -108,6 +108,7 @@ class Calendar(ABC):
             {
                 "link": str(event.link),
                 "id": event.id,
+                "src": event.calendar.name,
                 "update": str(datetime.now()),
                 "MARK": NONCE
             },
